@@ -1,0 +1,37 @@
+{
+  "info": {
+    "name": "AI多语种SaaS平台 API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "注册",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "url": {"raw": "{{baseUrl}}/api/register", "host": ["{{baseUrl}}"], "path": ["api","register"]},
+        "body": {"mode": "raw", "raw": "{\"username\":\"test\",\"password\":\"test\"}"}
+      }
+    },
+    {
+      "name": "登录",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/x-www-form-urlencoded"}],
+        "url": {"raw": "{{baseUrl}}/api/login", "host": ["{{baseUrl}}"], "path": ["api","login"]},
+        "body": {"mode": "urlencoded", "urlencoded": [{"key": "username", "value": "test"},{"key": "password", "value": "test"}]}
+      }
+    },
+    {
+      "name": "上传文件",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Authorization", "value": "Bearer {{token}}"}
+        ],
+        "url": {"raw": "{{baseUrl}}/api/upload", "host": ["{{baseUrl}}"], "path": ["api","upload"]},
+        "body": {"mode": "formdata", "formdata": [{"key": "file", "type": "file", "src": ""}]}
+      }
+    }
+  ]
+}

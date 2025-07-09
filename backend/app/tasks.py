@@ -1,25 +1,41 @@
 from celery import Celery
-from app.services.asr_service import run_asr
-from app.services.translate_service import run_translate
-from app.services.tts_service import run_tts
-from app.models import Task
-from app.crud import update_task_asr, update_task_translated, update_task_tts, update_task_status
-from app.utils import SessionLocal
+from app.services import asr_service, translate_service, tts_service
+from app import crud, models
+from app.utils import get_db_session
+from sqlalchemy.orm import Session
+import os
 
-celery_app = Celery(__name__, broker="redis://localhost:6379/0")
+celery_app = Celery("tasks", broker=os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0"))
 
-@celery_app.task
-def process_pipeline(task_id: int):
-    db = SessionLocal()
-    task = db.query(Task).get(task_id)
-    # ASR
-    asr_text = run_asr(task.file_path)
-    update_task_asr(db, task_id, asr_text)
-    # 翻译
-    translated = run_translate(asr_text, src_lang="en", tgt_lang="zh")
-    update_task_translated(db, task_id, translated)
-    # 配音
-    tts_url = run_tts(translated, lang="zh", voice_type="female1")
-    update_task_tts(db, task_id, tts_url)
-    update_task_status(db, task_id, "finished")
-    db.close()
+@celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
+def process_pipeline_task(self, task_id: int):
+    """
+    商业SaaS典型AI流水线：ASR->翻译->TTS->状态更新。每步异常自动重试。
+    """
+    db: Session = next(get_db_session())
+    try:
+        # 1. 拿任务信息
+        task = crud.get_task(db, task_id)
+        if not task:
+            return
+        # 2. ASR语音识别
+        asr_text = asr_service.asr_recognize(task.file_path)
+        task.asr_text = asr_text
+        db.commit()
+        # 3. 翻译
+        translated_text = translate_service.translate_text(asr_text, target_lang="EN")
+        task.translated_text = translated_text
+        db.commit()
+        # 4. TTS语音合成
+        tts_url = tts_service.synthesize_speech(translated_text, lang="en")
+        task.tts_url = tts_url
+        task.status = "completed"
+        db.commit()
+    except Exception as exc:
+        task = crud.get_task(db, task_id)
+        if task:
+            task.status = "failed"
+            db.commit()
+        raise self.retry(exc=exc)
+    finally:
+        db.close()

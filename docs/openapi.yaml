@@ -1,0 +1,81 @@
+openapi: 3.0.2
+info:
+  title: AI多语种SaaS平台 API
+  version: 1.0.0
+paths:
+  /api/register:
+    post:
+      summary: 用户注册
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username: {type: string}
+                password: {type: string}
+      responses:
+        '200': {description: 注册成功}
+  /api/login:
+    post:
+      summary: 用户登录
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username: {type: string}
+                password: {type: string}
+      responses:
+        '200': {description: 登录成功, content: {application/json: {schema: {type: object, properties: {access_token: {type: string}}}}}}
+  /api/upload:
+    post:
+      summary: 上传文件并创建任务
+      security: [{BearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: {type: string, format: binary}
+      responses:
+        '200': {description: 上传成功, content: {application/json: {schema: {type: object, properties: {task_id: {type: integer}}}}}}
+  /api/my_tasks:
+    get:
+      summary: 获取我的任务列表
+      security: [{BearerAuth: []}]
+      responses:
+        '200': {description: 任务列表, content: {application/json: {schema: {type: array, items: {type: object}}}}}
+  /api/task/{id}:
+    get:
+      summary: 查询单个任务详情
+      security: [{BearerAuth: []}]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: integer}
+      responses:
+        '200': {description: 任务详情, content: {application/json: {schema: {type: object}}}}
+  /api/billing/{id}:
+    get:
+      summary: 查询任务计费
+      security: [{BearerAuth: []}]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: integer}
+      responses:
+        '200': {description: 计费信息, content: {application/json: {schema: {type: object}}}}
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

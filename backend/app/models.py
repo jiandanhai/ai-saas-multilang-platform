@@ -1,8 +1,17 @@
-from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy.orm import relationship, declarative_base
 import datetime
 
 Base = declarative_base()
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    password = Column(String)
+    role = Column(String, default="user")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    tasks = relationship("Task", back_populates="owner")
 
 class Task(Base):
     __tablename__ = "tasks"
@@ -13,3 +22,5 @@ class Task(Base):
     translated_text = Column(String, nullable=True)
     tts_url = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    owner = relationship("User", back_populates="tasks")
