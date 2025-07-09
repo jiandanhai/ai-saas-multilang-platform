@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app import models, schemas, crud, auth
 from app.utils import get_db
-from app.services import asr_service, translate_service, tts_service, billing
+from services import asr_service, translate_service, tts_service, billing
 from app.tasks import process_pipeline_task
 import shutil, os
 

@@ -1,5 +1,5 @@
 from celery import Celery
-from app.services import asr_service, translate_service, tts_service
+from services import asr_service, translate_service, tts_service
 from app import crud, models
 from app.utils import get_db_session
 from sqlalchemy.orm import Session

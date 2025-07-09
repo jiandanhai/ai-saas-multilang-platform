@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routers import endpoints
+from api import endpoints
 from app.config import settings
 from fastapi.middleware.cors import CORSMiddleware
 
