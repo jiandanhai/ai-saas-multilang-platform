@@ -7,15 +7,13 @@
 - axios
 
 ## 快速启动
-```bash
-npm install
-npm run dev
+    ```bash
+    npm install
+    npm run dev
 
 ## 目录结构
     src/pages/ 入口页面（index.tsx, tasks.tsx, upload.tsx）
-    
     src/components/ 业务组件（UploadFile, TaskList, TaskStatus 等）
-    
     styles/ Tailwind 全局样式
 ## 配置说明
     默认API路径：/api/（代理到后端）
@@ -26,10 +24,8 @@ npm run dev
 ## 环境变量
     可在 .env.local 配置自定义 API 路径等：
     NEXT_PUBLIC_API_BASE=http://localhost:8000/api
-
     ---
-    
-    ### 2. frontend/api/index.ts
+### 2. frontend/api/index.ts
     ```ts
     // 封装 axios 实例，自动带 token，统一拦截
     import axios from 'axios';
@@ -47,6 +43,15 @@ npm run dev
       }
       return config;
     });
-    
     export default api;
+
+# 注意
+    pytharm没有用对项目根目录，用 PyCharm 打开的是整个后端+前端根目录，有时 TypeScript/JS 智能提示会失效。
+    正确操作：
+    切到 frontend 目录
+    npm install
+    npm install --save-dev @types/react @types/react-dom
+    检查 tsconfig.json 设置和 node_modules 目录
+    重启编辑器，重新索引
+    用 WebStorm/VSCode 会更顺畅
 
