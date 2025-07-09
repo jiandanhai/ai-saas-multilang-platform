@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 可根据品牌自定义全局色彩与字体 */
+body {
+  font-family: 'Inter', 'Helvetica', 'Arial', sans-serif;
+}
