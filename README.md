@@ -67,3 +67,49 @@
     npm run dev
 ### 1.4 Docker一键启动
     docker-compose up --build
+
+# API_KEY 获取方法
+## 1.DeepL 官方API页面<https://www.deepl.com/pro-api?cta=header-pro-api/> 注册/购买账号
+    登录后进入 DeepL控制台 > Account > Authentication Key（API密钥），复制类似 xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx 的字符串
+    填写到你的 .env 文件：DEEPL_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx
+## 2.BAIDU_TRANSLATE_API_KEY 获取方法
+    注册百度账号，进入 百度翻译开放平台<https://api.fanyi.baidu.com/>
+    新建应用，获取 APP ID 和 密钥（API Key）
+    填写到 .env 文件：
+    BAIDU_APP_ID=你的百度APP_ID
+    BAIDU_API_KEY=你的API_KEY
+    BAIDU_SECRET_KEY=你的SECRET_KEY
+## 3.AZURE_TRANSLATOR_KEY 获取方法
+    登录 Azure Portal<https://portal.azure.com/>
+    搜索“认知服务”或“Translator”，新建实例
+    获取资源密钥和终端点
+    填写到 .env 文件：
+    AZURE_TRANSLATOR_KEY=xxx
+    AZURE_TRANSLATOR_ENDPOINT=https://xxx.cognitiveservices.azure.com/
+## 4.OPENAI_API_KEY 获取方法
+    登录 OpenAI官网
+    点击 “Create new secret key” 生成 API Key，复制
+    填写到 .env 文件：OPENAI_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+## 5.SECRET_KEY 生成方法
+    只需保证足够随机/不可预测，建议 32~64位的随机字符串。
+    命令行快速生成（Python）：python -c "import secrets; print(secrets.token_hex(32))"
+    得到如：f84c7cbbef6b7b0a4cd6b2f7c3ae2cf8c61a3d4c4e364eb2cbbc4a1b0c773fc2
+    复制到 .env 文件：SECRET_KEY=f84c7cbbef6b7b0a4cd6b2f7c3ae2cf8c61a3d4c4e364eb2cbbc4a1b0c773fc2
+## 6..env 示例最终格式
+    SECRET_KEY=上面生成的强随机字符串
+    DEEPL_API_KEY=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx
+    BAIDU_APP_ID=xxxxxxx
+    BAIDU_API_KEY=xxxxxxx
+    BAIDU_SECRET_KEY=xxxxxxx
+    AZURE_TRANSLATOR_KEY=xxxxxxx
+    AZURE_TRANSLATOR_ENDPOINT=https://xxxxxx.cognitiveservices.azure.com/
+    OPENAI_API_KEY=sk-xxxxxxx
+    DATABASE_URL=postgresql://postgres:password@localhost:5432/saasdb
+    CELERY_BROKER_URL=redis://localhost:6379/0
+## 7.安全建议：
+    .env 只在服务端用，切勿上传到GitHub等公开仓库。
+    密钥失效请及时重置并更新。
+    线上部署推荐通过运维平台/容器密钥注入。
+    注意：.env 一般不会上传到git，注意在 .gitignore 里加 .env
+    本地/测试可以是 .env.dev  生产环境可以用 .env.prod，部署时软链为 .env
+    *****前端无需配置SECRET_KEY和API_KEY，这些只在后端用，前端只关心API URL和用户token ，切勿把密钥写到前端页面*****
