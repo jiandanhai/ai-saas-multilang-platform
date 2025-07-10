@@ -67,5 +67,3 @@
     npm run dev
 ### 1.4 Docker一键启动
     docker-compose up --build
-### 1.5 Docker一键启动
-    docker-compose up --build

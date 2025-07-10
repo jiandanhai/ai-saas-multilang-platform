@@ -1,10 +1,10 @@
 # AI多语种SaaS平台前端
 
 ## 技术栈
-- React 18 / Next.js 14
-- TypeScript 5+
-- TailwindCSS 3+
-- axios
+    - React 18 / Next.js 14
+    - TypeScript 5+
+    - TailwindCSS 3+
+    - axios
 
 ## 快速启动
     ```bash
@@ -54,4 +54,7 @@
     检查 tsconfig.json 设置和 node_modules 目录
     重启编辑器，重新索引
     用 WebStorm/VSCode 会更顺畅
+## 启动前端开发环境
+    npm run dev
+    然后访问 http://localhost:3000
 

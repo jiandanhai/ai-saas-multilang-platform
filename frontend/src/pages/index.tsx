@@ -1,52 +1,42 @@
-import React, { useState } from 'react';
-import RegisterForm from '../components/RegisterForm';
-import LoginForm from '../components/LoginForm';
-import UserProfile from '../components/UserProfile';
+import React, { useEffect, useState } from 'react';
 import UploadFile from '../components/UploadFile';
-import TaskList from '../components/TaskList';
 import TaskStatus from '../components/TaskStatus';
+import { useRouter } from 'next/router';
 
 const HomePage: React.FC = () => {
   const [token, setToken] = useState('');
-  const [username, setUsername] = useState('');
   const [taskId, setTaskId] = useState<number | null>(null);
-  const [view, setView] = useState<'login' | 'register' | 'profile'>('login');
+  const router = useRouter();
 
-  const handleLogin = (token: string, username: string) => {
-    setToken(token); setUsername(username); setView('profile');
-  };
+  useEffect(() => {
+    const t = localStorage.getItem('token');
+    if (!t) router.push('/login');
+    else setToken(t);
+  }, []);
+
   const handleLogout = () => {
-    setToken(''); setUsername(''); setView('login'); setTaskId(null);
+    localStorage.removeItem('token');
+    setToken('');
+    router.push('/login');
   };
+
+  if (!token) return null;
+
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center">
-      <h1 className="text-2xl font-bold my-6">AI多语种短视频智能平台</h1>
-      {token ? (
-        <>
-          <UserProfile username={username} onLogout={handleLogout} />
-          <UploadFile token={token} />
-          <TaskList token={token} onSelect={setTaskId} />
-          {taskId && <TaskStatus taskId={taskId} token={token} />}
-        </>
-      ) : (
-        <div className="w-full max-w-md">
-          {view === 'login' ? (
-            <>
-              <LoginForm onLogin={handleLogin} />
-              <div className="text-center mt-2">
-                <button className="text-blue-600" onClick={() => setView('register')}>去注册</button>
-              </div>
-            </>
-          ) : (
-            <>
-              <RegisterForm onSuccess={() => setView('login')} />
-              <div className="text-center mt-2">
-                <button className="text-blue-600" onClick={() => setView('login')}>已有账号？去登录</button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center relative">
+      {/* 顶部栏带退出按钮 */}
+      <header className="w-full flex justify-between items-center py-6 px-8">
+        <h1 className="text-2xl font-bold">AI多语种短视频智能平台</h1>
+        <button
+          className="bg-gray-500 hover:bg-gray-700 text-white px-4 py-1 rounded shadow"
+          onClick={handleLogout}
+        >
+          退出登录
+        </button>
+      </header>
+      {/* 页面主体 */}
+      <UploadFile token={token} />
+      {taskId && <TaskStatus taskId={taskId} token={token} />}
     </div>
   );
 };
