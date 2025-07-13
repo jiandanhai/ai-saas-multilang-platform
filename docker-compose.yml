@@ -1,24 +1,40 @@
 version: '3.11'
 services:
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: saasdb
+  redis:
+    image: redis:7.4
+    container_name: redis7
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis/data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      app-network:
+        ipv4_address: 172.20.0.2
+
+  postgres:
+    image: postgres:16
+    container_name: postgres16
+    restart: always
+    env_file:
+      - ./postgresql/.env
     ports:
       - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
-  redis:
-    image: redis:7
-    ports:
-      - "6379:6379"
+      - ./postgresql/data:/var/lib/postgresql/data
+    networks:
+      app-network:
+        ipv4_address: 172.20.0.3
   backend:
     build: ./backend
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     volumes:
       - ./backend:/app
+    networks:
+          app-network:
+            ipv4_address: 172.20.0.4
     environment:
       - DATABASE_URL=postgresql://postgres:password@db:5432/saasdb
       - CELERY_BROKER_URL=redis://redis:6379/0
@@ -27,13 +43,16 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      - postgres
       - redis
   celery_worker:
     build: ./backend
     command: celery -A app.tasks.celery_app worker --loglevel=info
     volumes:
       - ./backend:/app
+    networks:
+      app-network:
+        ipv4_address: 172.20.0.5
     environment:
       - DATABASE_URL=postgresql://postgres:password@db:5432/saasdb
       - CELERY_BROKER_URL=redis://redis:6379/0
@@ -41,14 +60,22 @@ services:
       - DEEPL_API_KEY=xxxx
     depends_on:
       - backend
-      - db
+      - postgres
       - redis
   frontend:
     build: ./frontend
     command: npm run dev
     volumes:
       - ./frontend:/app
+    networks:
+      app-network:
+        ipv4_address: 172.20.0.4
     ports:
       - "3000:3000"
-volumes:
-  db_data:
+networks:
+  app-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1

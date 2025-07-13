@@ -1,15 +1,18 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+const withPWA = require('next-pwa')({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development', // 开发模式不启用PWA
+});
+module.exports = withPWA({
   reactStrictMode: true,
   swcMinify: true,
-  // API 代理到后端
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:8000/api/:path*' // FastAPI后端
+        destination: 'http://localhost:8000/api/:path*'
       }
     ];
   }
-};
-module.exports = nextConfig;
+});

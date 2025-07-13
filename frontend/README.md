@@ -7,10 +7,29 @@
     - axios
 
 ## 快速启动
+### 本地开发:
     ```bash
+    cd frontend
+    npm install next-pwa
     npm install
     npm run dev
-
+    访问 http://localhost:3000，手机扫码或浏览器访问
+### 正式部署:
+    npm run build
+    npm run start
+    建议配合 nginx 部署，支持 https
+    手机端访问体验几乎等同原生App
+### 核心体验:
+    用户可在任意手机浏览器、微信、企业微信、钉钉等内置浏览器访问
+    支持直接上传、任务查看、播放，适配触屏操作
+    添加到主屏幕后，无浏览器地址栏、全屏沉浸体验，与App几乎一致
+    支持暗色模式，视觉体验优良
+### （可选）上线应用市场
+    如后续要真正在App Store/应用宝上线，可用 uni-app/Cordova/Capacitor 封装，不需改动代码。
+### 参考文档
+    next-pwa官方文档<https://github.com/shadowwalker/next-pwa>
+    Google PWA最佳实践<https://web.dev/progressive-web-apps/>
+    Tailwind响应式设计<https://tailwindcss.com/docs/responsive-design>
 ## 目录结构
     src/pages/ 入口页面（index.tsx, tasks.tsx, upload.tsx）
     src/components/ 业务组件（UploadFile, TaskList, TaskStatus 等）

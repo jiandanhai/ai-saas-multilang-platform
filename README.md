@@ -51,15 +51,16 @@
     合规与数据安全 多区域数据合规策略 敏感信息加密存储与传输 内容/用户/接口全链路审计 内容自动审核/涉政涉敏风控 四、团队组建建议 核心成员：产品经理、前端、后端、AI/算法、测试、UI/UX、运维、售后/运营、市场BD 扩展岗位：客户成功、数据分析、合规专员、海外本地市场专员 建议人数：起步8-12人（核心岗齐全），快速增长期20+人
 ## 快速启动 
 ### 1.1 克隆 & 初始化
-    git clone your_repo_url.git
+    git clone git@github.com:jiandanhai/ai-saas-multilang-platform.git
     cd ai-saas-multilang-platform
 ### 1.2 后端
     cd backend
-    python3.11 -m venv venv
+    python -m venv venv  （若系统默认Python版本为3.11）  或 py -3.11 -m venv venv （显式指定版本）
     source venv/bin/activate   # Windows用 venv\Scripts\activate
     pip install -r requirements.txt
+    或者：pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple --国内 PyPI 镜像
     cp .env.example .env       # 编辑配置
-    uvicorn app.main:app --reload
+    uvicorn app.main:app --reload 启动 Uvicorn ASGI 服务器，主要用于运行 FastAPI 或 Starlette 等 Python ASGI 应用程序
     celery -A app.tasks.celery_app worker --loglevel=info
 ### 1.3 前端
     cd frontend
