@@ -5,7 +5,7 @@ from app.utils import get_db_session
 from sqlalchemy.orm import Session
 from app.config import settings
 
-celery_app = Celery('tasks', broker=settings.celery_broker_url)
+celery_app = Celery('tasks', broker=settings.CELERY_BROKER_URL)
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
 def process_pipeline_task(self, task_id: int):
