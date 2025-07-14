@@ -9,11 +9,11 @@ class Settings(BaseSettings):
     BAIDU_API_KEY: str = ""
     BAIDU_SECRET_KEY: str = ""
 
-    DEEPL_API_KEY = ""
-    GOOGLE_API_KEY = ""
-    AZURE_API_KEY = ""
-    AZURE_REGION = "eastasia"
-    OPENAI_API_KEY = ""
+    DEEPL_API_KEY: str = ""
+    GOOGLE_API_KEY: str = ""
+    AZURE_API_KEY: str = ""
+    AZURE_REGION: str = "eastasia"
+    OPENAI_API_KEY: str = ""
 
     #在 config.py 里自动读取.env
     class Config:
