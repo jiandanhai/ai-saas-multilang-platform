@@ -1,26 +1,27 @@
-# 使用官方Node 18 Alpine小体积镜像
+# 1. 构建阶段
 FROM node:18-alpine AS builder
-
 WORKDIR /app
 
-# 优先复制 lockfile，加速缓存利用
+# 优化缓存：先复制依赖描述文件
 COPY package.json package-lock.json ./
 
-# 优化：用国内npm镜像源 & 兼容旧lockfile
+# 使用国内npm源，兼容旧lockfile
 RUN npm config set registry https://registry.npmmirror.com \
     && npm install --legacy-peer-deps
 
-# 再复制源码
+# 复制源码
 COPY . ./
 
-# 构建前端生产包（适用于 Next.js/React/TypeScript 等）
+# 构建 Next.js 生产包
 RUN npm run build
 
-# ---- 生产环境镜像 ----
+# 2. 生产运行阶段（更安全、镜像小）
 FROM node:18-alpine AS prod
 WORKDIR /app
-COPY --from=builder /app .
 
+COPY --from=builder /app ./
+ENV NODE_ENV=production
 EXPOSE 3000
-# CMD ["npm", "run", "dev"]
+
+# 用 package.json 的 "start": "next start"
 CMD ["npm", "run", "start"]
