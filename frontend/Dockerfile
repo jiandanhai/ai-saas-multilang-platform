@@ -1,18 +1,26 @@
-# 使用官方 Node.js 镜像
-FROM node:16-alpine
+# 使用官方Node 18 Alpine小体积镜像
+FROM node:18-alpine AS builder
 
-# 设置工作目录
 WORKDIR /app
 
-# 复制依赖文件并安装依赖
-COPY package.json package-lock.json /app/
-RUN npm install
+# 优先复制 lockfile，加速缓存利用
+COPY package.json package-lock.json ./
 
-# 复制其他文件
-COPY . /app/
+# 优化：用国内npm镜像源 & 兼容旧lockfile
+RUN npm config set registry https://registry.npmmirror.com \
+    && npm install --legacy-peer-deps
 
-# 暴露前端端口
+# 再复制源码
+COPY . ./
+
+# 构建前端生产包（适用于 Next.js/React/TypeScript 等）
+RUN npm run build
+
+# ---- 生产环境镜像 ----
+FROM node:18-alpine AS prod
+WORKDIR /app
+COPY --from=builder /app .
+
 EXPOSE 3000
-
-# 启动命令
-CMD ["npm", "run", "dev"]
+# CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "start"]
