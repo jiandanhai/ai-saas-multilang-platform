@@ -83,7 +83,7 @@ services:
       - ./frontend:/app
     networks:
       app-network:
-        ipv4_address: 172.20.0.4
+        ipv4_address: 172.20.0.6
     ports:
       - "3000:3000"
     command: npm run start
