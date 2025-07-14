@@ -49,7 +49,7 @@
     技术选型 前端：React (Next.js/Antd/Tailwind/移动端H5适配/小程序框架) 后端：Python（FastAPI/Celery/Node.js可选），微服务架构 AI引擎：Whisper/DeepL/Google/自研LLM/ElevenLabs/TTS 存储：S3/阿里OSS/分布式对象存储 数据库：PostgreSQL（主）、MongoDB/Redis 任务队列：Celery/RabbitMQ/Kafka DevOps：Docker、K8s、CI/CD自动部署 安全：HTTPS全站、JWT鉴权、API签名、DDOS防护、日志合规
     可扩展性 微服务化/Serverless可弹性伸缩 高并发限流/分布式队列保障 灰度发布/自动回滚 多活容灾、自动备份 云厂商中立支持（AWS/Azure/阿里/本地私有云）
     合规与数据安全 多区域数据合规策略 敏感信息加密存储与传输 内容/用户/接口全链路审计 内容自动审核/涉政涉敏风控 四、团队组建建议 核心成员：产品经理、前端、后端、AI/算法、测试、UI/UX、运维、售后/运营、市场BD 扩展岗位：客户成功、数据分析、合规专员、海外本地市场专员 建议人数：起步8-12人（核心岗齐全），快速增长期20+人
-## 快速启动 
+## 快速启动 （redis 7.4、PostgreSQL 16、Backend、Celery Worker、Frontend分别在centos上直接启动，启动顺序redis->porgresql->backend->Celery Worker->Frontend）
 ### 1.1 克隆 & 初始化
     git clone git@github.com:jiandanhai/ai-saas-multilang-platform.git
     cd ai-saas-multilang-platform
@@ -59,17 +59,68 @@
     source venv/bin/activate  激活虚拟环境  # Windows用 venv\Scripts\activate
     pip install -r requirements.txt 如果缺少pydantic-settings 需执行 pip install pydantic-settings
     或者：pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple --国内 PyPI 镜像
-    cp .env.example .env       # 编辑配置
+    cp ../.env.example .env       # 编辑配置
     uvicorn app.main:app --reload 启动 Uvicorn ASGI 服务器，主要用于运行 FastAPI 或 Starlette 等 Python ASGI 应用程序
     注意：上面命令只能本机访问，外网不能直接访问，推荐启动时用 0.0.0.0 ：uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 这样才可以用服务器公网IP:8000 访问
     celery -A app.tasks.celery_app worker --loglevel=info
 ### 1.3 前端
+#### 1.3.1前提条件：安装 Node.js 和 npm
+    wget https://nodejs.org/dist/v18.17.1/node-v18.17.1-linux-x64.tar.xz
+    sudo tar -xvf node-*.tar.xz -C /usr/local --strip-components=1
+    添加环境变量
+    echo 'export PATH=$PATH:/usr/local/bin' >> ~/.bashrc
+    source ~/.bashrc
+#### 1.3.2 启动
     cd frontend
     npm install
     npm run dev
-### 1.4 Docker一键启动
-    docker-compose up --build
-
+## 基于docker-compose一键启动
+### 1. 环境准备
+    安装 Docker & Docker Compose(略)
+    推荐服务器配置：2C4G以上，磁盘>=20G
+### 2. 项目目录
+    ai-saas-multilang-platform/
+    ├── backend/          # 后端服务目录（含Dockerfile）
+    ├── frontend/         # 前端服务目录（含Dockerfile）
+    ├── .env              # 所有环境变量配置
+    └── docker-compose.yml
+### 3. .env 配置（详将具体配置，注意：不要在仓库公开明文密钥，生产用更强随机密码！）
+### 4. 启动/构建命令
+    cd ai-saas-multilang-platform
+    # 第一次构建
+    sudo docker-compose build
+    # 启动全部服务
+    sudo docker-compose up -d 或者docker-compose -f ./custom/docker-compose.yml up -d
+    之后如需重启：sudo docker-compose restart
+    查看所有容器状态：sudo docker-compose ps
+    查看服务日志（如backend、celery_worker等）：
+    sudo docker-compose logs -f backend
+    sudo docker-compose logs -f celery_worker
+    sudo docker-compose logs -f frontend
+### 5. 访问服务
+    前端（H5/PWA）： http://服务器IP:3000/
+    后端 API 文档（Swagger）： http://服务器IP:8000/docs
+    PostgreSQL、Redis 暴露在 5432、6379
+    可用nginx加反代/https
+### 6. 其它常见运维操作
+    容器停止：sudo docker-compose down
+    清理卷（慎用，数据会丢失）：sudo docker-compose down -v
+    进入容器调试：
+    sudo docker-compose exec backend /bin/bash
+    sudo docker-compose exec postgres bash
+    sudo docker-compose exec redis sh
+    只重启单个服务：sudo docker-compose restart backend
+### 7. 升级/扩展
+    新拉代码后：sudo docker-compose build --no-cache，再up -d
+    修改.env需重启服务生效
+### 8. 常见问题
+    端口冲突/目录结构错误请按文档检查
+    若某服务无法启动，docker-compose logs -f 服务名查日志
+    后端.env参数要和config.py对应，否则会报pydantic校验错误
+### 9. 停止/卸载
+    sudo docker-compose down
+    如需清理全部数据卷：
+    sudo docker-compose down -v
 # API_KEY 获取方法
 ## 1.DeepL 官方API页面<https://www.deepl.com/pro-api?cta=header-pro-api/> 注册/购买账号
     登录后进入 DeepL控制台 > Account > Authentication Key（API密钥），复制类似 xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx 的字符串
