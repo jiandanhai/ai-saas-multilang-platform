@@ -4,7 +4,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = ""
     DEEP_L_API_KEY: str = ""
     DATABASE_URL: str = ""
-    CELERY_BROKER_URL: str = ""
+    CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     BAIDU_APP_ID: str = ""
     BAIDU_API_KEY: str = ""
     BAIDU_SECRET_KEY: str = ""

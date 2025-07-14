@@ -3,9 +3,9 @@ from services import asr_service, translate_service, tts_service
 from app import crud, models
 from app.utils import get_db_session
 from sqlalchemy.orm import Session
-import os
+from app.config import settings
 
-celery_app = Celery("tasks", broker=os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0"))
+celery_app = Celery('tasks', broker=settings.celery_broker_url)
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
 def process_pipeline_task(self, task_id: int):
