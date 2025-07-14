@@ -55,12 +55,13 @@
     cd ai-saas-multilang-platform
 ### 1.2 后端
     cd backend
-    python -m venv venv  （若系统默认Python版本为3.11）  或 py -3.11 -m venv venv （显式指定版本）
-    source venv/bin/activate   # Windows用 venv\Scripts\activate
+    python -m venv venv --创建虚拟环境，与系统全局环境隔离，该命令会在当前目录下生成 venv 文件夹 （若系统默认Python版本为3.11）  或 py -3.11 -m venv venv （显式指定版本）
+    source venv/bin/activate  激活虚拟环境  # Windows用 venv\Scripts\activate
     pip install -r requirements.txt
     或者：pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple --国内 PyPI 镜像
     cp .env.example .env       # 编辑配置
     uvicorn app.main:app --reload 启动 Uvicorn ASGI 服务器，主要用于运行 FastAPI 或 Starlette 等 Python ASGI 应用程序
+    注意：上面命令只能本机访问，外网不能直接访问，推荐启动时用 0.0.0.0 ：uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 这样才可以用服务器公网IP:8000 访问
     celery -A app.tasks.celery_app worker --loglevel=info
 ### 1.3 前端
     cd frontend
