@@ -87,9 +87,9 @@
 ### 3. .env 配置（详将具体配置，注意：不要在仓库公开明文密钥，生产用更强随机密码！）
 ### 4. 启动/构建命令
     cd ai-saas-multilang-platform
-    # 第一次构建
+    第一次构建
     sudo docker-compose build
-    # 启动全部服务
+    启动全部服务（compose 网络和已有网络 IP 段重叠冲突解决（不冲突略过此步骤）：查找冲突网段：docker network ls；网段详细信息： docker network inspect <网络名>；清理无用网络（慎用）：docker network prune；或删除具体网络：docker network rm <网络名>）
     sudo docker-compose up -d 或者docker-compose -f ./custom/docker-compose.yml up -d
     之后如需重启：sudo docker-compose restart
     查看所有容器状态：sudo docker-compose ps
