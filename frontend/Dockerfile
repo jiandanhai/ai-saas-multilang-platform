@@ -13,7 +13,7 @@ RUN npm config set registry https://registry.npmmirror.com \
 COPY . ./
 
 # 构建 Next.js 生产包
-RUN npm run build
+RUN npm run build && ls -l /app/.next
 
 # 2. 生产运行阶段（更安全、镜像小）
 FROM node:18-alpine AS prod

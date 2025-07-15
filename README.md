@@ -91,6 +91,13 @@
     sudo docker-compose build 或者 docker-compose build --no-cache 重建
     启动全部服务（compose 网络和已有网络 IP 段重叠冲突解决（不冲突略过此步骤）：查找冲突网段：docker network ls；网段详细信息： docker network inspect <网络名>；清理无用网络（慎用）：docker network prune；或删除具体网络：docker network rm <网络名>）
     sudo docker-compose up -d 或者docker-compose -f ./custom/docker-compose.yml up -d
+        如果报“next not found”，则执行下面操作：
+            ***docker run --rm -it -v $(pwd):/app -w /app node:18-alpine sh
+            容器内：
+            ***npm config set registry https://registry.npmmirror.com
+            ***npm install --legacy-peer-deps
+            ***exit
+
     之后如需重启：sudo docker-compose restart
     查看所有容器状态：sudo docker-compose ps
     查看服务日志（如backend、celery_worker等）：
