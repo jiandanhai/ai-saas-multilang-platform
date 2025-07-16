@@ -1,5 +1,5 @@
 // src/api/index.ts 终极修正版（兼容所有编辑器、严格 TS、PyCharm/VSCode 都不会报错）
-import axios, { AxiosRequestConfig, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosRequestConfig, AxiosInstance, InternalAxiosRequestConfig ,AxiosResponse } from 'axios';
 
 const api: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE || '/api',
@@ -74,9 +74,19 @@ export async function fetchUserInfo() {
   return api.get('/user/me');
 }
 
-// 获取任务列表
-export async function fetchTasks(params: { page?: number; status?: string }) {
-  return api.get('/tasks', { params });
+// 获取任务列表（分页+状态筛选，健壮兼容格式）
+export async function fetchTasks(params?: { page?: number; status?: string }) {
+  try {
+    const res: AxiosResponse = await api.get("/tasks", { params });
+    // 多种数据结构兼容
+    if (Array.isArray(res.data)) return res.data;
+    if (res.data && Array.isArray(res.data.items)) return res.data.items;
+    if (res.data && res.data.data && Array.isArray(res.data.data.items)) return res.data.data.items;
+    if (res.data && res.data.data && Array.isArray(res.data.data)) return res.data.data;
+    return [];
+  } catch (err) {
+    return [];
+  }
 }
 
 // 获取单个任务详情
