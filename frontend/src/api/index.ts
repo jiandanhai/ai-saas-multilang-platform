@@ -64,9 +64,9 @@ export async function sendEmailCode(email: string) {
 }
 
 // 登录（邮箱或用户名）
-type LoginParams = { username?: string; email?: string; password: string };
-export async function loginUser(params: LoginParams) {
-  return api.post('/login', params);
+export async function loginUser(username: string, password: string): Promise<{ token: string }> {
+  const res = await api.post("/login", { username, password });
+  return res.data;  // 确保后端返回的是 {token: ...}
 }
 
 // 获取当前用户信息
