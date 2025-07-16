@@ -1,13 +1,45 @@
-import React, { useState } from 'react';
-import UploadFile from '../components/UploadFile';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import Header from "../components/Header";
+import TrialQuotaBanner from "../components/TrialQuotaBanner";
+import UploadFile from "../components/UploadFile";
 
 const UploadPage: React.FC = () => {
-  const [token, setToken] = useState(''); // 实际可用全局Context
+  const [token, setToken] = useState("");
+  const [username, setUsername] = useState("");
+  const router = useRouter();
+
+  useEffect(() => {
+    const t = localStorage.getItem("token");
+    const u = localStorage.getItem("username");
+    if (!t) router.push("/login");
+    else {
+      setToken(t);
+      setUsername(u || "用户");
+    }
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+    setToken("");
+    router.push("/login");
+  };
+
+  if (!token) return null;
+
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center">
-      <h1 className="text-xl font-bold my-4">上传新任务</h1>
-      <UploadFile token={token} />
-    </div>
+    <>
+      <TrialQuotaBanner />
+      <Header onLogout={handleLogout} username={username} />
+      <main className="max-w-xl mx-auto px-4 py-12 flex flex-col items-center">
+        <section className="w-full bg-frost/80 backdrop-blur-2xl rounded-2xl shadow-glass p-10">
+          <h2 className="text-2xl font-bold text-brand mb-3 text-center">上传文件</h2>
+          <p className="mb-6 text-gray-500 text-center">支持多语种识别与智能翻译，安全私密。</p>
+           <UploadFile token={token} />
+        </section>
+      </main>
+    </>
   );
 };
 export default UploadPage;

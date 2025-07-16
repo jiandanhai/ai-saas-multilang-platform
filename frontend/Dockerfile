@@ -13,13 +13,16 @@ RUN npm config set registry https://registry.npmmirror.com \
 COPY . ./
 
 # 构建 Next.js 生产包
-RUN npm run build && ls -l /app/.next
+RUN npm run build && ls -l /app/.next || (echo 'NO .next FOUND' && exit 1)
 
 # 2. 生产运行阶段（更安全、镜像小）
 FROM node:18-alpine AS prod
 WORKDIR /app
-
-COPY --from=builder /app ./
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+#COPY --from=builder /app ./
 ENV NODE_ENV=production
 EXPOSE 3000
 

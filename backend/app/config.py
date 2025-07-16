@@ -15,6 +15,17 @@ class Settings(BaseSettings):
     AZURE_REGION: str = "eastasia"
     OPENAI_API_KEY: str = ""
 
+    FREE_TRIAL_LIMIT: int = 0
+
+    # 用户注册相关
+    EMAIL_USER: str = ""
+    EMAIL_PASS: str = ""
+    EMAIL_FROM: str = ""
+    EMAIL_HOST: str = ""
+    EMAIL_PORT: int = 465
+    #frontend
+    NEXT_PUBLIC_API_BASE: str = ""
+
     #在 config.py 里自动读取.env
     class Config:
         env_file = ".env"
