@@ -1,0 +1,101 @@
+version: '3.11'
+services:
+  redis:
+    image: redis:7.4
+    container_name: redis7
+    restart: always
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-zxh}
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-zxh}"]
+    networks:
+      app-network:
+        ipv4_address: 172.20.0.2
+
+  postgres:
+    image: postgres:16
+    container_name: postgres16
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-dev-db}
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      app-network:
+        ipv4_address: 172.20.0.3
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      - redis
+      - postgres
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-admin}@postgres:5432/${POSTGRES_DB:-dev-db}
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-zxh}@redis:6379/0
+    networks:
+      app-network:
+        ipv4_address: 172.20.0.4
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      - redis
+      - postgres
+      - backend
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-admin}@postgres:5432/${POSTGRES_DB:-dev-db}
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-zxh}@redis:6379/0
+    volumes:
+      - ./backend:/app
+    networks:
+      app-network:
+        ipv4_address: 172.20.0.5
+    command: celery -A app.tasks.celery_app worker --loglevel=info
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - backend
+    environment:
+      - NEXT_PUBLIC_API_BASE=http://backend:8000/api
+#生产环境不要挂载本地卷,产物 .next 和 node_modules 应该全部留在 Docker 镜像内部
+#    volumes:
+#     - ./frontend:/app
+    networks:
+      app-network:
+        ipv4_address: 172.20.0.6
+    ports:
+      - "3000:3000"
+    command: npm run start
+volumes:
+  pg_data:
+  redis_data:
+
+networks:
+  app-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
