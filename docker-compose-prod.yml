@@ -79,9 +79,6 @@ services:
       - backend
     environment:
       - NEXT_PUBLIC_API_BASE=http://backend:8000/api
-#生产环境不要挂载本地卷,产物 .next 和 node_modules 应该全部留在 Docker 镜像内部
-#    volumes:
-#     - ./frontend:/app
     networks:
       app-network:
         ipv4_address: 172.20.0.6
