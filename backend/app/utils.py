@@ -1,50 +1,52 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from app.config import settings
 import redis
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session
+from contextlib import contextmanager
+from typing import Any, Generator
+from app.config import settings
 
-engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)
+# 环境变量/配置项
+REDIS_URL = settings.CELERY_BROKER_URL
+PG_URL = settings.DATABASE_URL
+
+# ----------- Redis 通用工具类 -----------
+class RedisUtils:
+    def __init__(self, url: str = REDIS_URL):
+        self._pool = redis.ConnectionPool.from_url(url, decode_responses=True)
+        self._r = redis.Redis(connection_pool=self._pool)
+
+    def set(self, key: str, value: Any):
+        return self._r.set(key, value)
+
+    def get(self, key: str):
+        return self._r.get(key)
+
+    def delete(self, key: str):
+        return self._r.delete(key)
+
+    def incrby(self, key: str, amount: int = 1):
+        return self._r.incrby(key, amount)
+
+    def decrby(self, key: str, amount: int = 1):
+        return self._r.decrby(key, amount)
+
+    def setex(self, key: str, time: int, value: Any):
+        return self._r.setex(key, time, value)
+
+    def exists(self, key: str):
+        return self._r.exists(key)
+
+    def close(self):
+        self._r.close()
+
+# ----------- PostgreSQL 通用Session管理 -----------
+engine = create_engine(PG_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-rds = redis.Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=settings.REDIS_DB, decode_responses=True)
 
-def get_db():
+@contextmanager
+def get_db_session() -> Generator[Session, None, None]:
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-
-def get_db_session():
-    # 用于celery等不在FastAPI上下文下的任务
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-def save_email_code(email: str, code: str, expire=300):
-    rds.set(f"verify_code:{email}", code, ex=expire)
-
-def get_email_code(email: str):
-    return rds.get(f"verify_code:{email}")
-
-def send_verify_email(email: str, code: str):
-    conf = ConnectionConfig(
-        MAIL_USERNAME=settings.MAIL_USERNAME,
-        MAIL_PASSWORD=settings.MAIL_PASSWORD,
-        MAIL_FROM=settings.MAIL_FROM,
-        MAIL_PORT=settings.MAIL_PORT,
-        MAIL_SERVER=settings.MAIL_SERVER,
-        MAIL_TLS=True,
-        MAIL_SSL=False,
-        USE_CREDENTIALS=True
-    )
-    fm = FastMail(conf)
-    message = MessageSchema(
-        subject="验证码",
-        recipients=[email],
-        body=f"您的验证码是：{code}",
-        subtype="plain"
-    )
-    return fm.send_message(message)

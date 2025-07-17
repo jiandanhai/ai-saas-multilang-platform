@@ -2,10 +2,6 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     #REDIS连接信息
-    REDIS_HOST: str = ""
-    REDIS_PORT: int = 6379
-    REDIS_PASSWORD: str = ""
-    REDIS_DB: int = 0
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     #PORTGRESQL连接信息
     DATABASE_URL: str = ""
@@ -23,7 +19,7 @@ class Settings(BaseSettings):
     AZURE_REGION: str = "eastasia"
     OPENAI_API_KEY: str = ""
 
-    FREE_TRIAL_LIMIT: int = 0
+    FREE_TRIAL_LIMIT: int = 10
 
     # 用户注册相关
     EMAIL_USER: str = ""
