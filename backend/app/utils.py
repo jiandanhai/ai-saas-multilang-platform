@@ -50,6 +50,7 @@ class GeneralUtils:
         r.decr(key)
 
     # ===== 邮箱验证码/邮件发送相关 =====
+    @staticmethod
     def send_verify_email(email, code):
         subject = '您的验证码'
         content = f'您的验证码是：{code}，5分钟内有效。如非本人操作请忽略。'
@@ -65,30 +66,45 @@ class GeneralUtils:
         except Exception as e:
             print(f"邮件发送失败: {e}")
 
+    @classmethod
+    def set(cls, key: str, value: Any):
+        r = cls.get_client()
+        return r.set(key, value)
 
-    def set(self, key: str, value: Any):
-        return self._r.set(key, value)
+    @classmethod
+    def get(cls, key: str):
+        r = cls.get_client()
+        return r.get(key)
 
-    def get(self, key: str):
-        return self._r.get(key)
+    @classmethod
+    def delete(cls, key: str):
+        r = cls.get_client()
+        return r.delete(key)
 
-    def delete(self, key: str):
-        return self._r.delete(key)
+    @classmethod
+    def incrby(cls, key: str, amount: int = 1):
+        r = cls.get_client()
+        return r.incrby(key, amount)
 
-    def incrby(self, key: str, amount: int = 1):
-        return self._r.incrby(key, amount)
+    @classmethod
+    def decrby(cls, key: str, amount: int = 1):
+        r = cls.get_client()
+        return r.decrby(key, amount)
 
-    def decrby(self, key: str, amount: int = 1):
-        return self._r.decrby(key, amount)
+    @classmethod
+    def setex(cls, key: str, time: int, value: Any):
+        r = cls.get_client()
+        return r.setex(key, time, value)
 
-    def setex(self, key: str, time: int, value: Any):
-        return self._r.setex(key, time, value)
+    @classmethod
+    def exists(cls, key: str):
+        r = cls.get_client()
+        return r.exists(key)
 
-    def exists(self, key: str):
-        return self._r.exists(key)
-
-    def close(self):
-        self._r.close()
+    @classmethod
+    def close(cls):
+        r = cls.get_client()
+        r.close()
 
     # ----------- PostgreSQL 通用Session管理 -----------
 engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)
