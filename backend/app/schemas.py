@@ -4,22 +4,22 @@ import datetime
 
 class UserBase(BaseModel):
     username: str
+    email: EmailStr
 
 class UserCreate(UserBase):
     password: str
-    email: EmailStr        # 新增
 
 class UserRead(UserBase):
     id: int
     role: str
-    email: EmailStr        # 新增
     created_at: datetime.datetime
     class Config:
         orm_mode = True
 
-class UserLogin(BaseModel):    # 登录结构
+class UserLogin(BaseModel):  # 登录结构
     username: str
     password: str
+    email: Optional[EmailStr] = None
 
 class SendCodeRequest(BaseModel):
     email: EmailStr
@@ -27,6 +27,7 @@ class SendCodeRequest(BaseModel):
 class VerifyCodeRequest(BaseModel):
     email: EmailStr
     code: str
+
 class TaskBase(BaseModel):
     file_path: str
     status: Optional[str] = None

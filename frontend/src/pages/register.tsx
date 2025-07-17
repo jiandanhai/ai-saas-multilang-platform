@@ -1,51 +1,56 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
-import { registerUser, sendVerifyCode } from "../api/index";
+import api from "../api";
 import Link from "next/link";
 
 const Register: React.FC = () => {
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-  const [verifyCode, setVerifyCode] = useState("");
+  const [username, setUsername] = useState("");
+  const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
-  const [agreed, setAgreed] = useState(false);
-  const [sending, setSending] = useState(false);
+  const [agreement, setAgreement] = useState(false);
   const [error, setError] = useState("");
-  const [sent, setSent] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
+
   const router = useRouter();
 
   // 发送验证码
   const handleSendCode = async () => {
-    setSending(true);
+    if (!email) {
+      setError("请输入邮箱");
+      return;
+    }
     setError("");
+    setSending(true);
     try {
-      const res = await sendVerifyCode(email);
-      setSent(true);
-      setError(res.success ? "验证码已发送到邮箱" : res.message);
+      await api.post("/user/send_code", { email });
+      setSuccess("验证码已发送，请查收邮箱");
     } catch (e: any) {
-      setError("验证码发送失败，请检查邮箱地址");
+      setError(e?.response?.data?.detail || "验证码发送失败");
     }
     setSending(false);
   };
 
-  // 注册提交
+  // 提交注册
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!agreed) {
-      setError("请先阅读并同意服务协议");
+    setSuccess("");
+    if (!agreement) {
+      setError("请同意服务协议");
       return;
     }
+    setLoading(true);
     try {
-      await registerUser({
-        username, password, email, verify_code: verifyCode, agreed,
-      });
-      setSuccess(true);
-      setTimeout(() => router.push("/login"), 1800);
+      await api.post("/user/register", { username, email, code, password });
+      setSuccess("注册成功，请登录");
+      setTimeout(() => router.push("/login"), 1200);
     } catch (e: any) {
-      setError(e?.response?.data?.detail || "注册失败，请检查信息");
+      setError(e?.response?.data?.detail || "注册失败");
     }
+    setLoading(false);
   };
 
   return (
@@ -54,39 +59,74 @@ const Register: React.FC = () => {
         className="bg-white/90 rounded-2xl p-8 shadow-2xl w-full max-w-md space-y-6 backdrop-blur-md"
         onSubmit={handleSubmit}
       >
-        <h1 className="text-2xl font-extrabold text-center text-brand">注册新账号</h1>
-        <div className="space-y-3">
-          <input type="text" className="input w-full" autoComplete="username"
-            placeholder="用户名" value={username}
-            onChange={e => setUsername(e.target.value)} required />
+        <h1 className="text-2xl font-extrabold text-center text-brand">账号注册</h1>
+        <div className="space-y-4">
+          <input
+            type="email"
+            className="input w-full"
+            placeholder="邮箱"
+            autoComplete="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+          />
           <div className="flex gap-2">
-            <input type="email" className="input flex-1" placeholder="邮箱"
-              autoComplete="email"
-              value={email} onChange={e => setEmail(e.target.value)} required />
-            <button type="button"
-              className={`btn text-xs ${sending ? "opacity-60" : ""}`}
-              onClick={handleSendCode} disabled={sending || !email}>
-              {sent ? "重新发送" : "获取验证码"}
+            <input
+              type="text"
+              className="input flex-1"
+              placeholder="验证码"
+              value={code}
+              onChange={e => setCode(e.target.value)}
+              required
+            />
+            <button
+              type="button"
+              className={`btn btn-sm ${sending ? "opacity-50 pointer-events-none" : ""}`}
+              onClick={handleSendCode}
+              disabled={sending}
+            >
+              {sending ? "发送中..." : "获取验证码"}
             </button>
           </div>
-          <input type="text" className="input w-full" placeholder="验证码"
-            value={verifyCode} onChange={e => setVerifyCode(e.target.value)} required />
-          <input type="password" className="input w-full" autoComplete="new-password"
-            placeholder="密码" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+          <input
+            type="text"
+            className="input w-full"
+            placeholder="用户名"
+            autoComplete="username"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            className="input w-full"
+            placeholder="密码"
+            autoComplete="new-password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+          />
         </div>
-        <label className="flex items-center gap-2 text-xs text-gray-600">
-          <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} required />
+        <label className="flex items-center gap-2 text-xs text-gray-600 mt-2">
+          <input
+            type="checkbox"
+            checked={agreement}
+            onChange={e => setAgreement(e.target.checked)}
+          />
           我已阅读并同意
-          <Link href="/terms" target="_blank" className="underline text-brand hover:text-indigo-800 ml-1">服务协议</Link>
+          <Link href="/terms" className="underline text-brand ml-1" target="_blank">服务协议</Link>
         </label>
-        {error && <div className="text-sm text-red-500">{error}</div>}
-        <button type="submit"
-          className={`btn w-full mt-1 ${!agreed ? "opacity-40 pointer-events-none" : ""}`}>
-          注册
+        {error && <div className="text-red-500 text-xs text-center">{error}</div>}
+        {success && <div className="text-green-500 text-xs text-center">{success}</div>}
+        <button
+          type="submit"
+          className={`btn w-full mt-2 ${loading ? "opacity-60 pointer-events-none" : ""}`}
+          disabled={loading}
+        >
+          {loading ? "注册中…" : "注册"}
         </button>
-        {success && <div className="text-green-600 text-center mt-2">注册成功，正在跳转…</div>}
-        <div className="text-center text-xs mt-2">
-          已有账号？<Link href="/login" className="underline text-brand">登录</Link>
+        <div className="text-center text-xs mt-2 text-gray-500">
+          已有账号？<Link href="/login" className="underline text-brand ml-1">登录</Link>
         </div>
       </form>
     </main>

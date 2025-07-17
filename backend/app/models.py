@@ -9,6 +9,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     password = Column(String)
+    email = Column(String, unique=True, index=True)  # 支持邮箱注册
     role = Column(String, default="user")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     tasks = relationship("Task", back_populates="owner")

@@ -1,13 +1,10 @@
 from sqlalchemy.orm import Session
 from app.models import User, Task
-from app.utils import RedisUtils, get_db_session
+from app.utils import GeneralUtils, get_db_session
 from app.schemas import UserCreate
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# 实例化 Redis 工具类
-redis_utils = RedisUtils()
 
 # ORM相关方法
 
@@ -50,23 +47,27 @@ VERIFY_KEY_PREFIX = "verify_code:"
 
 # 以下方法全部通过 RedisUtils 工具类实现
 
+# ===== 邮箱验证码/邮件发送相关 =====
+def send_verify_email(email, code):
+    GeneralUtils.send_verify_email(f"{QUOTA_KEY_PREFIX}{email}", code)
+
 def get_user_quota(user_id: str) -> int:
-    val = redis_utils.get(f"{QUOTA_KEY_PREFIX}{user_id}")
+    val = GeneralUtils.get(f"{QUOTA_KEY_PREFIX}{user_id}")
     return int(val) if val is not None else 0
 
 def set_user_quota(user_id: str, quota: int):
-    redis_utils.set(f"{QUOTA_KEY_PREFIX}{user_id}", quota)
+    GeneralUtils.set(f"{QUOTA_KEY_PREFIX}{user_id}", quota)
 
 def incr_user_quota(user_id: str, amount: int = 1):
-    redis_utils.incrby(f"{QUOTA_KEY_PREFIX}{user_id}", amount)
+    GeneralUtils.incrby(f"{QUOTA_KEY_PREFIX}{user_id}", amount)
 
 def decr_user_quota(user_id: str, amount: int = 1):
-    redis_utils.decrby(f"{QUOTA_KEY_PREFIX}{user_id}", amount)
+    GeneralUtils.decrby(f"{QUOTA_KEY_PREFIX}{user_id}", amount)
 
 # 验证码：5分钟有效
 
 def set_email_verify_code(email: str, code: str, expire: int = 300):
-    redis_utils.setex(f"{VERIFY_KEY_PREFIX}{email}", expire, code)
+    GeneralUtils.setex(f"{VERIFY_KEY_PREFIX}{email}", expire, code)
 
 def get_email_verify_code(email: str) -> str:
-    return redis_utils.get(f"{VERIFY_KEY_PREFIX}{email}")
+    return GeneralUtils.get(f"{VERIFY_KEY_PREFIX}{email}")

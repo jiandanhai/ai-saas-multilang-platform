@@ -7,19 +7,18 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        brand: "#5B73FF",
+        brand: "#4F46E5", // 统一主色
         frost: "#F0F4FF",
       },
       boxShadow: {
         glass: "0 8px 32px 0 rgba(90, 98, 192, 0.15)",
       },
       animation: {
-        fadein: "fadein 0.7s cubic-bezier(.39,.575,.565,1) both",
+        fadein: "fadeIn 0.5s ease",
       },
       keyframes: {
         fadein: {
-          '0%': { opacity: 0, transform: "translateY(16px)" },
-          '100%': { opacity: 1, transform: "translateY(0)" }
+          from: { opacity: 0 }, to: { opacity: 1 }
         },
       },
     },
