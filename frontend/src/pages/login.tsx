@@ -40,7 +40,7 @@ const HomePage: React.FC = () => {
   return (
     <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
       <TrialQuotaBanner quotaLeft={quotaLeft ?? undefined} />
-      <Header token={token} username={username} onLogout={handleLogout} />
+      <Header username={username} onLogout={handleLogout} quotaLeft={quotaLeft} />
       <main className="max-w-2xl mx-auto px-4 py-14 flex flex-col items-center">
         <section className="w-full bg-white/80 rounded-2xl shadow-xl p-10 animate-fadein">
           <h1 className="text-3xl font-extrabold text-brand mb-2 text-center">AI多语言智能平台</h1>

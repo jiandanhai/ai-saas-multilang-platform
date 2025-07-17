@@ -62,7 +62,7 @@ const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-tr from-blue-50 via-fuchsia-50 to-pink-50 dark:from-gray-900 dark:to-slate-900">
       <TrialQuotaBanner />
-      <Header onLogout={handleLogout} username={username} />
+      <Header username={username} onLogout={handleLogout} quotaLeft={quotaLeft} />
       <main className="max-w-2xl mx-auto px-2 py-12 flex flex-col items-center gap-10">
         <motion.section
           initial={{ opacity: 0, y: 30 }}

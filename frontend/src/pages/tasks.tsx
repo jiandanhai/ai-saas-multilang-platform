@@ -13,6 +13,7 @@ const TaskListPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("all");
   const router = useRouter();
+   const [quotaLeft, setQuotaLeft] = useState<number | null>(null);
 
   useEffect(() => {
     const t = localStorage.getItem("token");
@@ -50,7 +51,7 @@ const TaskListPage: React.FC = () => {
 
   return (
     <>
-      <Header onLogout={handleLogout} username={username} />
+      <Header username={username} onLogout={handleLogout} quotaLeft={quotaLeft} />
       <main className="max-w-3xl mx-auto px-4 py-12">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-extrabold text-brand">我的任务</h2>

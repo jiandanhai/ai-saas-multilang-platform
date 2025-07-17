@@ -37,7 +37,7 @@ const UploadPage: React.FC = () => {
   return (
     <>
       <TrialQuotaBanner />
-      <Header onLogout={handleLogout} username={username} />
+     <Header username={username} onLogout={handleLogout} quotaLeft={quotaLeft} />
       <main className="max-w-xl mx-auto px-4 py-12 flex flex-col items-center">
         <section className="w-full bg-frost/80 backdrop-blur-2xl rounded-2xl shadow-glass p-10">
           <h2 className="text-2xl font-bold text-brand mb-3 text-center">上传文件</h2>
