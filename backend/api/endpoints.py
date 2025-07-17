@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks,Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from app import models, schemas, crud, auth
+from app import models, schemas, crud, auth,utils
 from app.utils import get_db
 from services import asr_service, translate_service, tts_service, billing
 from app.tasks import process_pipeline_task
@@ -12,6 +12,9 @@ from app.config import settings
 from pydantic import BaseModel, EmailStr
 
 router = APIRouter()
+# SaaS试用配额配置
+FREE_TRIAL_QUOTA = 5
+REGISTERED_QUOTA = 50
 
 # ======== 新增：邮箱验证码注册能力（SaaS级） ========
 r = redis.StrictRedis.from_url(settings.CELERY_BROKER_URL, decode_responses=True)
@@ -19,65 +22,70 @@ r = redis.StrictRedis.from_url(settings.CELERY_BROKER_URL, decode_responses=True
 def random_code(n=6):
     return ''.join(random.choices(string.digits, k=n))
 
-class EmailCodeRequest(BaseModel):
+class VerifyCodeRequest(BaseModel):
     email: EmailStr
 
-@router.post("/send_email_code")
-def send_email_code(body: EmailCodeRequest):
-    code = random_code(6)
+@router.post("/send-verify-code")
+async def send_verify_code(req: VerifyCodeRequest, background_tasks: BackgroundTasks):
+    code = ''.join(random.choices(string.digits, k=6))
+    # 假设存在全局redis/数据库用于保存验证码
+    crud.save_verify_code(req.email, code)
+    # 邮件发送
     conf = ConnectionConfig(
-        MAIL_USERNAME=settings.EMAIL_USER,
-        MAIL_PASSWORD=settings.EMAIL_PASS,
-        MAIL_FROM=settings.EMAIL_FROM,
-        MAIL_PORT=settings.EMAIL_PORT,
-        MAIL_SERVER=settings.EMAIL_HOST,
-        MAIL_TLS=True, MAIL_SSL=False,
-        USE_CREDENTIALS=True
+        MAIL_USERNAME=settings.MAIL_USERNAME,
+        MAIL_PASSWORD=settings.MAIL_PASSWORD,
+        MAIL_FROM=settings.MAIL_FROM,
+        MAIL_PORT=settings.MAIL_PORT,
+        MAIL_SERVER=settings.MAIL_SERVER,
+        MAIL_TLS=True,
+        MAIL_SSL=False,
+        USE_CREDENTIALS=True,
     )
     message = MessageSchema(
-        subject="LinguaFlow 注册验证码",
-        recipients=[body.email],
-        body=f"您的注册验证码：{code}，5分钟内有效。若非本人操作请忽略。",
-        subtype="plain"
+        subject="您的验证码",
+        recipients=[req.email],
+        body=f"您的验证码是：{code}，5分钟内有效。如非本人操作请忽略。",
+        subtype="plain",
     )
     fm = FastMail(conf)
-    fm.send_message(message)
-    r.setex(f"email_captcha:{body.email}", 300, code)
+    background_tasks.add_task(fm.send_message, message)
+    return {"success": True, "message": "验证码发送成功"}
+
+# 邮箱验证码发送
+# 邮箱验证码发送
+@router.post("/send_code")
+def send_code(req: schemas.SendCodeRequest):
+    code = "".join(random.choices(string.digits, k=6))
+    utils.save_email_code(req.email, code)
+    utils.send_verify_email(req.email, code)
     return {"msg": "验证码已发送"}
 
-class RegisterBody(BaseModel):
-    email: EmailStr
-    username: str = ""
-    password: str
-    code: str
-
+# 注册接口，带邮箱和验证码校验
 @router.post("/register", response_model=schemas.UserRead)
-def register_user(body: RegisterBody, db: Session = Depends(get_db)):
-    code_redis = r.get(f"email_captcha:{body.email}")
-    if not code_redis or body.code != code_redis:
+def register(user: schemas.UserCreate, code: str, db: Session = Depends(utils.get_db)):
+    # 校验验证码
+    real_code = utils.get_email_code(user.email)
+    if not real_code or real_code != code:
         raise HTTPException(status_code=400, detail="验证码错误或已过期")
-    if crud.get_user_by_email(db, body.email):
+    db_user = crud.get_user_by_email(db, user.email)
+    if db_user:
         raise HTTPException(status_code=400, detail="邮箱已注册")
-    hashed_pw = auth.get_password_hash(body.password)
-    user = crud.create_user(db, body.username, hashed_pw, body.email)
-    r.delete(f"email_captcha:{body.email}")
-    return user
+    return crud.create_user_with_email(db, user)
 
-# ======== 原有：用户名密码注册/登录 ========
-@router.post("/register_username", response_model=schemas.UserRead)
-def register_user_name(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    if crud.get_user_by_username(db, user.username):
-        raise HTTPException(status_code=400, detail="Username already registered")
-    hashed_pw = auth.get_password_hash(user.password)
-    return crud.create_user(db, user.username, hashed_pw, email=None)
-
+# 登录接口
 @router.post("/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = crud.get_user_by_username(db, form_data.username)
-    if not user or not auth.verify_password(form_data.password, user.password):
-        raise HTTPException(status_code=400, detail="Invalid credentials")
-    token = auth.create_access_token(data={"sub": user.username})
-    return {"access_token": token, "token_type": "bearer"}
+def login(user: schemas.UserLogin, db: Session = Depends(utils.get_db)):
+    db_user = crud.get_user_by_email(db, user.username)
+    if not db_user or not crud.verify_password(user.password, db_user.hashed_password):
+        raise HTTPException(status_code=400, detail="用户名或密码错误")
+    # ...生成token，返回
+
+# 试用配额查询（假设未登录可匿名查剩余额度）
+@router.get("/quota")
+def get_quota(request: Request):
+    # 可根据 session/cookie 或 ip 限流
+    # 示例返回
+    return {"quota_remain": 3, "quota_total": 3}
 
 # -------- 文件上传并触发AI流水线 --------
 @router.post("/upload")

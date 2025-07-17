@@ -2,13 +2,15 @@ from sqlalchemy.orm import Session
 from app.models import User, Task
 import redis
 from app.config import settings
+from app.schemas import UserCreate
+from passlib.context import CryptContext
 
-# 推荐在 config.py 配 REDIS_URL，这里简单用环境变量
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 rds = redis.Redis.from_url(settings.CELERY_BROKER_URL, decode_responses=True)
 
-# ORM相关方法保持不变
-def create_user(db: Session, username: str, password: str, role: str = "user") -> User:
-    db_user = User(username=username, password=password, role=role)
+# ORM相关方法
+def create_user(db: Session, username: str, password: str, email: str, role: str = "user") -> User:
+    db_user = User(username=username, password=password, email=email, role=role)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -16,6 +18,19 @@ def create_user(db: Session, username: str, password: str, role: str = "user") -
 
 def get_user_by_username(db: Session, username: str) -> User:
     return db.query(User).filter(User.username == username).first()
+
+def get_user_by_email(db: Session, email: str) -> User:
+    return db.query(User).filter(User.email == email).first()
+
+def create_user_with_email(db: Session, user: UserCreate):
+    db_user = User(username=user.username, email=user.email, hashed_password=pwd_context.hash(user.password))
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
 
 def create_task(db: Session, file_path: str, user_id: int) -> int:
     task = Task(file_path=file_path, user_id=user_id)
@@ -27,8 +42,9 @@ def create_task(db: Session, file_path: str, user_id: int) -> int:
 def get_task(db: Session, task_id: int) -> Task:
     return db.query(Task).filter(Task.id == task_id).first()
 
-# Redis存储quota
+# Redis存储配额
 QUOTA_KEY_PREFIX = "saas_quota:"
+VERIFY_KEY_PREFIX = "verify_code:"
 
 def get_user_quota(user_id: str) -> int:
     val = rds.get(f"{QUOTA_KEY_PREFIX}{user_id}")
@@ -36,3 +52,16 @@ def get_user_quota(user_id: str) -> int:
 
 def set_user_quota(user_id: str, quota: int):
     rds.set(f"{QUOTA_KEY_PREFIX}{user_id}", quota)
+
+def incr_user_quota(user_id: str, amount: int = 1):
+    rds.incrby(f"{QUOTA_KEY_PREFIX}{user_id}", amount)
+
+def decr_user_quota(user_id: str, amount: int = 1):
+    rds.decrby(f"{QUOTA_KEY_PREFIX}{user_id}", amount)
+
+# 验证码：5分钟有效
+def set_email_verify_code(email: str, code: str, expire: int = 300):
+    rds.setex(f"{VERIFY_KEY_PREFIX}{email}", expire, code)
+
+def get_email_verify_code(email: str) -> str:
+    return rds.get(f"{VERIFY_KEY_PREFIX}{email}")

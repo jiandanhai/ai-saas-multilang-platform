@@ -1,16 +1,18 @@
-import { useTrialQuota } from '../hooks/useTrialQuota';
-import { useState, useEffect } from 'react';
+import React from "react";
 
-export default function TrialQuotaBanner() {
-  const { quota, limit, usedUp } = useTrialQuota();
-  const [show, setShow] = useState(false);
-  useEffect(() => { if (usedUp) setShow(true); }, [usedUp]);
-  if (!usedUp) return <div className="fixed top-2 right-2 bg-yellow-100 px-4 py-2 rounded shadow">免费额度剩余 <b>{limit-quota}</b> 次</div>;
+const TrialQuotaBanner: React.FC<{ quotaLeft?: number }> = ({ quotaLeft }) => {
+  if (typeof quotaLeft === "number" && quotaLeft <= 0) {
+    return (
+      <div className="fixed top-0 w-full bg-yellow-100 text-yellow-900 py-2 text-center font-bold shadow-md z-30 animate-pulse">
+        免费试用额度已用完，请 <a href="/register" className="underline text-indigo-700">注册/登录</a> 解锁更多功能
+      </div>
+    );
+  }
   return (
-    <div className="fixed top-0 left-0 right-0 bg-yellow-200 text-center py-4 z-50">
-      <h2>免费额度已用完</h2>
-      <p>注册登录即可解锁更多用量！</p>
-      <button className="btn btn-primary" onClick={()=>location.href='/register'}>去注册/登录</button>
+    <div className="fixed top-0 w-full bg-gradient-to-r from-indigo-200 via-blue-100 to-indigo-100 text-center py-2 text-xs shadow-sm z-20">
+      <span>欢迎体验AI多语种SaaS平台，试用有额度限制，注册后可解锁全部能力</span>
     </div>
   );
-}
+};
+
+export default TrialQuotaBanner;

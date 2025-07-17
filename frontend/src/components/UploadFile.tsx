@@ -1,73 +1,72 @@
-import React, { useRef, useState } from 'react';
-import { UploadCloud, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import React, { useState } from "react";
+import api from "../api";
 
-interface UploadResponse { task_id: number; }
-const UploadFile: React.FC<{ token: string; onFinish?: (taskId: number) => void }> = ({ token, onFinish }) => {
-  const fileInput = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [taskId, setTaskId] = useState<number | null>(null);
-  const [error, setError] = useState("");
+interface UploadFileProps {
+  token: string | null;
+  quotaLeft: number | null;
+}
+
+const UploadFile: React.FC<UploadFileProps> = ({ token, quotaLeft }) => {
+  const [file, setFile] = useState<File | null>(null);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const canUpload = (quotaLeft ?? 0) > 0 && token;
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFile(e.target.files?.[0] || null);
+    setMessage("");
+  };
 
   const handleUpload = async () => {
-    const file = fileInput.current?.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    setError("");
+    if (!file) {
+      setMessage("请选择文件");
+      return;
+    }
+    if (!canUpload) {
+      setMessage("请登录或注册后上传，或试用额度已用完");
+      return;
+    }
+    setLoading(true);
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      const resp = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-        headers: { 'Authorization': `Bearer ${token}` }
+      formData.append("file", file);
+      // 可根据后端接口增加其它参数
+      const { data } = await api.post("/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
       });
-      if (!resp.ok) throw new Error((await resp.json()).detail || '上传失败');
-      const data: UploadResponse = await resp.json();
-      setTaskId(data.task_id);
-      onFinish && onFinish(data.task_id);
-    } catch (e: any) {
-      setError(e?.message || '上传失败');
-    } finally {
-      setUploading(false);
+      setMessage(data.msg || "上传成功");
+    } catch (error: any) {
+      setMessage(error?.response?.data?.detail || "上传失败");
     }
+    setLoading(false);
   };
 
   return (
-    <div className="max-w-xl w-full p-8 rounded-2xl shadow-xl bg-gradient-to-br from-white to-slate-100 dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700 animate-fadein">
-      <div className="flex items-center gap-3 mb-5">
-        <UploadCloud className="text-fuchsia-600 dark:text-fuchsia-400" size={32} />
-        <span className="font-semibold text-lg">上传你的音视频文件</span>
-      </div>
+    <div className="flex flex-col gap-4 items-center">
       <input
         type="file"
-        ref={fileInput}
-        className="mb-4 block w-full border rounded px-2 py-2 text-gray-700 dark:text-gray-100 bg-white dark:bg-slate-800 focus:border-fuchsia-400 focus:ring-2 focus:ring-fuchsia-200"
-        accept="audio/*,video/*"
-        disabled={uploading}
+        className="file-input file-input-bordered file-input-primary w-full max-w-xs"
+        onChange={handleChange}
+        disabled={!canUpload}
       />
       <button
-        className={`w-full py-2 rounded-xl font-bold transition-all  ${uploading ? "bg-gray-400" : "bg-fuchsia-500 hover:bg-fuchsia-600"} text-white`}
-        disabled={uploading}
+        className={`btn btn-primary w-full ${loading || !canUpload ? "opacity-50 cursor-not-allowed" : ""}`}
+        disabled={loading || !canUpload}
         onClick={handleUpload}
       >
-        {uploading ? (
-          <span className="flex items-center justify-center gap-2"><Loader2 className="animate-spin" /> 上传中...</span>
-        ) : "上传文件"}
+        {loading ? "上传中..." : "上传"}
       </button>
-      {taskId &&
-        <div className="flex items-center gap-2 mt-4 text-green-600 dark:text-green-400 animate-bounce-in">
-          <CheckCircle2 /> 任务已提交！ID: <b>{taskId}</b>
+      {message && (
+        <div className="w-full text-center text-sm text-gray-700">{message}</div>
+      )}
+      {!token && (
+        <div className="text-xs text-gray-400 mt-2">
+          未登录状态下仅可试用有限额度，<a className="underline text-brand" href="/register">注册/登录</a>可解锁全部功能
         </div>
-      }
-      {error &&
-        <div className="flex items-center gap-2 mt-4 text-red-600 dark:text-red-400 animate-shake">
-          <XCircle /> {error}
-        </div>
-      }
-      <div className="mt-6 text-xs text-gray-400 dark:text-gray-500">
-        支持 MP3/MP4/WAV/M4A/WEBM/AVI 等常见格式，最大1GB
-      </div>
+      )}
     </div>
   );
 };
+
 export default UploadFile;

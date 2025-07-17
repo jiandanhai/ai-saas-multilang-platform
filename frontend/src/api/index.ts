@@ -1,63 +1,69 @@
 // src/api/index.ts 终极修正版（兼容所有编辑器、严格 TS、PyCharm/VSCode 都不会报错）
-import axios, { AxiosRequestConfig, AxiosInstance, InternalAxiosRequestConfig ,AxiosResponse } from 'axios';
+import axios, {AxiosInstance, AxiosRequestConfig, AxiosHeaders,AxiosResponse} from "axios";
 
 const api: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE || '/api',
+  baseURL: process.env.NEXT_PUBLIC_API_BASE || "/api",
   timeout: 15000,
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
-// 彻底TS安全写法：PyCharm/VSCode都100%不报错
-api.interceptors.request.use(
-  (config: InternalAxiosRequestConfig<any>) => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      if (token) {
-        // 创建全新对象，彻底避免 headers 类型问题
-        const newHeaders: Record<string, string> = {};
-        // 只处理原本 headers 为对象的情况
-        if (config.headers && typeof config.headers === 'object' && !Array.isArray(config.headers)) {
-          // 复制所有 string 类型的 header
-          Object.entries(config.headers).forEach(([k, v]) => {
-            if (typeof v === 'string') newHeaders[k] = v;
-          });
+// 拦截器写法，兼容 PyCharm/VSCode/TS，无类型红线
+api.interceptors.request.use((config: any) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token) {
+      let headers: Record<string, string> = {};
+      // 保留原有 headers
+      if (config.headers && typeof config.headers === "object") {
+        if (typeof (config.headers as any).set === "function") {
+          // Axios v1/v2 Headers 对象转普通对象
+          headers = Object.fromEntries(
+            Object.entries(config.headers as any).filter(
+              ([k, v]) => typeof v === "string"
+            )
+          ) as Record<string, string>;
+        } else {
+          headers = { ...(config.headers as Record<string, string>) };
         }
-        // 覆盖 Authorization
-        newHeaders['Authorization'] = `Bearer ${token}`;
-        // 赋值（类型断言，TS 不会报错）
-        (config as any).headers = newHeaders;
       }
+      headers["Authorization"] = `Bearer ${token}`;
+      config.headers = headers as any;
     }
-    return config;
-  },
-  error => Promise.reject(error)
-);
-
-// 响应拦截：401 自动跳转登录
-api.interceptors.response.use(
-  res => res,
-  err => {
-    if (err?.response?.status === 401) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('username');
-        window.location.href = '/login';
-      }
-    }
-    return Promise.reject(err);
   }
-);
+  return config;
+});
 
-/** ====== 业务接口方法区 ====== */
+// 响应拦截：401时跳登录
+api.interceptors.response.use(res => res, err => {
+  if (err?.response?.status === 401) {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("token");
+      localStorage.removeItem("username");
+      window.location.href = "/login";
+    }
+  }
+  return Promise.reject(err);
+});
 
-// 注册（带邮箱/验证码）
-export async function registerUser({ username, password, email, code }: { username: string, password: string, email: string, code?: string }) {
-  return api.post('/register', { username, password, email, code });
+// 新增API
+export async function sendVerifyCode(email: string): Promise<{success: boolean, message: string}> {
+  const { data } = await api.post("/send-verify-code", { email });
+  return data;
 }
 
+export async function registerUser(payload: {
+  username: string;
+  password: string;
+  email: string;
+  verify_code: string;
+  agreed: boolean;
+}) {
+  const { data } = await api.post("/register", payload);
+  return data;
+}
 // 发送邮箱验证码
 export async function sendEmailCode(email: string) {
   return api.post('/send_code', { email });

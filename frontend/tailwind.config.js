@@ -1,26 +1,28 @@
-// tailwind.config.js
+/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     "./src/**/*.{js,ts,jsx,tsx}",
+    "./pages/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ['Inter', 'Helvetica Neue', 'Arial', 'sans-serif'],
-      },
       colors: {
-        brand: '#7b47ff', // 品牌主色，可换
-        'brand-light': '#ede9fe',
-        'brand-dark': '#512da8',
-        'frost': 'rgba(255,255,255,0.75)',
+        brand: "#5B73FF",
+        frost: "#F0F4FF",
       },
       boxShadow: {
-        glass: '0 4px 32px 0 rgba(123,71,255,.12), 0 1.5px 6px 0 rgba(0,0,0,.06)',
+        glass: "0 8px 32px 0 rgba(90, 98, 192, 0.15)",
       },
-      backgroundImage: {
-        'gradient-brand': 'linear-gradient(135deg, #7b47ff 0%, #6ae3ff 100%)',
+      animation: {
+        fadein: "fadein 0.7s cubic-bezier(.39,.575,.565,1) both",
+      },
+      keyframes: {
+        fadein: {
+          '0%': { opacity: 0, transform: "translateY(16px)" },
+          '100%': { opacity: 1, transform: "translateY(0)" }
+        },
       },
     },
   },
   plugins: [],
-}
+};

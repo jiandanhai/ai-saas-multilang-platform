@@ -103,7 +103,10 @@
             docker-compose up -d frontend
 
     之后如需重启：sudo docker-compose restart
-    查看所有容器状态：sudo docker-compose ps
+    进入容器确认产物存在
+    docker-compose exec frontend ls -al /app/.next
+    docker-compose exec frontend ls -al /app/node_modules
+    查看所有容器状态：sudo docker-compose ps -a
     查看服务日志（如backend、celery_worker等）：
     sudo docker-compose logs -f backend
     sudo docker-compose logs -f celery_worker

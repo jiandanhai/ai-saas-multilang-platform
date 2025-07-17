@@ -19,10 +19,16 @@ class Settings(BaseSettings):
 
     # 用户注册相关
     EMAIL_USER: str = ""
+    MAIL_USERNAME: str = ""
+    MAIL_PASSWORD: str = ""
     EMAIL_PASS: str = ""
     EMAIL_FROM: str = ""
     EMAIL_HOST: str = ""
+    MAIL_SERVER: str = ""
     EMAIL_PORT: int = 465
+    MAIL_TLS: str = "false"
+    MAIL_SSL: str = "ture"
+
     #frontend
     NEXT_PUBLIC_API_BASE: str = ""
 

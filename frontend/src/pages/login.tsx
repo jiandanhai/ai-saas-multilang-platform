@@ -1,104 +1,65 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { loginUser } from "../api";
+import Header from "../components/Header";
+import TrialQuotaBanner from "../components/TrialQuotaBanner";
+import UploadFile from "../components/UploadFile";
+import api from "../api";
 
-// 通用安全提取 token 工具函数
-function extractToken(res: any): string | undefined {
-  // 1. 直接返回 token
-  if (res && typeof res.token === "string") return res.token;
-  // 2. axios 规范 data.token
-  if (res && res.data && typeof res.data.token === "string") return res.data.token;
-  // 3. axios 多重 data.data.token
-  if (res && res.data && res.data.data && typeof res.data.data.token === "string") return res.data.data.token;
-  // 4. axios/fetch 极端嵌套
-  if (res && res.response && res.response.data && typeof res.response.data.token === "string") return res.response.data.token;
-  return undefined;
-}
-
-const LoginPage: React.FC = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+const HomePage: React.FC = () => {
+  const [token, setToken] = useState<string | null>(null);
+  const [username, setUsername] = useState<string>("");
+  const [quotaLeft, setQuotaLeft] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    try {
-      const res = await loginUser(username, password);
-      const token = extractToken(res);
-      if (!token) throw new Error("登录响应无 token");
-      localStorage.setItem("token", token);
-      localStorage.setItem("username", username);
-      router.push("/");
-    } catch (err: any) {
-      setError(
-        err?.response?.data?.detail ||
-        err?.message ||
-        "登录失败，请重试"
-      );
-    } finally {
-      setLoading(false);
-    }
+  // 1. 检查登录状态
+  useEffect(() => {
+    const t = localStorage.getItem("token");
+    const u = localStorage.getItem("username");
+    setToken(t);
+    setUsername(u || "");
+  }, []);
+
+  // 2. 获取剩余额度
+  useEffect(() => {
+    api.get("/user/trial_quota")
+      .then((res) => setQuotaLeft(res.data.quota_left))
+      .catch(() => setQuotaLeft(0))
+      .finally(() => setLoading(false));
+  }, []);
+
+  // 3. 退出
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("username");
+    setToken(null);
+    setUsername("");
+    router.push("/login");
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-100 via-fuchsia-100 to-purple-100 animate-fadein">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md bg-white/80 dark:bg-slate-900/90 backdrop-blur-lg rounded-2xl shadow-xl px-10 py-10 mt-10 animate-slidein"
-      >
-        <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-fuchsia-500 to-violet-600 mb-6 text-center">
-          登录 LinguaFlow
-        </h2>
-        <div className="mb-6">
-          <input
-            type="text"
-            placeholder="用户名"
-            className="w-full rounded-xl border border-gray-200 shadow-inner bg-white/80 p-3 focus:border-fuchsia-500 focus:ring-2 focus:ring-fuchsia-300 text-lg"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            required
-            autoFocus
-          />
-        </div>
-        <div className="mb-6">
-          <input
-            type="password"
-            placeholder="密码"
-            className="w-full rounded-xl border border-gray-200 shadow-inner bg-white/80 p-3 focus:border-blue-400 focus:ring-2 focus:ring-blue-300 text-lg"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-          />
-        </div>
-        {error && (
-          <div className="mb-4 text-red-500 text-sm text-center animate-shake">
-            {error}
-          </div>
-        )}
-        <button
-          type="submit"
-          className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-blue-500 text-white font-bold shadow-lg hover:scale-105 transition-all text-lg mb-2 disabled:opacity-50"
-          disabled={loading}
-        >
-          {loading ? "登录中..." : "登录"}
-        </button>
-        <div className="text-center mt-3 text-gray-500 dark:text-gray-400">
-          没有账号？{" "}
-          <a
-            href="/register"
-            className="text-fuchsia-600 hover:underline font-bold"
-          >
-            去注册
-          </a>
-        </div>
-      </form>
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+      <TrialQuotaBanner quotaLeft={quotaLeft ?? undefined} />
+      <Header token={token} username={username} onLogout={handleLogout} />
+      <main className="max-w-2xl mx-auto px-4 py-14 flex flex-col items-center">
+        <section className="w-full bg-white/80 rounded-2xl shadow-xl p-10 animate-fadein">
+          <h1 className="text-3xl font-extrabold text-brand mb-2 text-center">AI多语言智能平台</h1>
+          <p className="mb-6 text-gray-600 text-center">试用配额剩余 <span className="text-indigo-700 font-semibold">{quotaLeft ?? "--"}</span> 次</p>
+          <UploadFile token={token} quotaLeft={quotaLeft} />
+          {loading && (
+            <div className="w-full flex justify-center mt-6">
+              <span className="animate-spin text-brand">加载中…</span>
+            </div>
+          )}
+          {quotaLeft !== null && quotaLeft <= 0 && (
+            <div className="w-full text-center text-red-600 mt-6">
+              试用额度已用完，请 <a className="underline text-brand" href="/register">注册/登录</a> 解锁更多功能
+            </div>
+          )}
+        </section>
+      </main>
     </div>
   );
 };
 
-export default LoginPage;
+export default HomePage;
