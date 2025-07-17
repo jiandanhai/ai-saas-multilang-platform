@@ -4,6 +4,9 @@ import Header from "../components/Header";
 import TrialQuotaBanner from "../components/TrialQuotaBanner";
 import UploadFile from "../components/UploadFile";
 
+// 1. 增加配额状态
+const [quotaLeft, setQuotaLeft] = useState<number>(0);
+
 const UploadPage: React.FC = () => {
   const [token, setToken] = useState("");
   const [username, setUsername] = useState("");
@@ -36,7 +39,7 @@ const UploadPage: React.FC = () => {
         <section className="w-full bg-frost/80 backdrop-blur-2xl rounded-2xl shadow-glass p-10">
           <h2 className="text-2xl font-bold text-brand mb-3 text-center">上传文件</h2>
           <p className="mb-6 text-gray-500 text-center">支持多语种识别与智能翻译，安全私密。</p>
-           <UploadFile token={token} />
+            <UploadFile token={token} quotaLeft={quotaLeft} />
         </section>
       </main>
     </>
