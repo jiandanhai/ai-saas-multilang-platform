@@ -8,7 +8,7 @@ import UploadFile from "../components/UploadFile";
 import api from "../api";
 import { AnimatePresence, motion } from "framer-motion";
 
-// 正确 Promise 封装，保证返回数组
+// fetchTasks: Promise 封装，保证返回数组
 async function fetchTasks(token: string): Promise<any[]> {
   try {
     const res = await api.get("/tasks", {
@@ -19,6 +19,9 @@ async function fetchTasks(token: string): Promise<any[]> {
     return [];
   }
 }
+
+// 1. 增加配额状态
+const [quotaLeft, setQuotaLeft] = useState<number>(0);
 
 const HomePage: React.FC = () => {
   const [token, setToken] = useState("");
@@ -38,13 +41,12 @@ const HomePage: React.FC = () => {
     }
   }, [router]);
 
+  // 2. 拉取配额（如服务端有 /user/quota 或类似接口）
   useEffect(() => {
     if (!token) return;
-    setLoading(true);
-    fetchTasks(token)
-      .then(setTasks)
-      .catch(() => setTasks([]))
-      .finally(() => setLoading(false));
+    api.get('/user/quota', { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => setQuotaLeft(res.data?.quotaLeft ?? 0))
+      .catch(() => setQuotaLeft(0));
   }, [token]);
 
   const handleLogout = () => {
@@ -70,7 +72,7 @@ const HomePage: React.FC = () => {
           <div className="absolute inset-0 pointer-events-none z-0" style={{ background: "radial-gradient(circle at 90% 20%,rgba(93,133,255,.08),transparent 60%)" }}></div>
           <h1 className="text-4xl font-extrabold bg-gradient-to-br from-blue-700 via-fuchsia-500 to-pink-500 bg-clip-text text-transparent text-center mb-2 tracking-tight drop-shadow">AI多语言智能平台</h1>
           <p className="mb-10 text-base text-gray-500 text-center font-medium z-10 relative">免费体验多语言上传处理，配额用完后注册解锁更多功能。</p>
-          <UploadFile token={token} />
+          <UploadFile token={token} quotaLeft={quotaLeft} />
         </motion.section>
 
         <motion.section
