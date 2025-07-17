@@ -20,8 +20,7 @@ async function fetchTasks(token: string): Promise<any[]> {
   }
 }
 
-// 1. 增加配额状态
-const [quotaLeft, setQuotaLeft] = useState<number>(0);
+
 
 const HomePage: React.FC = () => {
   const [token, setToken] = useState("");
@@ -30,6 +29,8 @@ const HomePage: React.FC = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  // 1. 增加配额状态
+  const [quotaLeft, setQuotaLeft] = useState<number>(0);
 
   useEffect(() => {
     const t = localStorage.getItem("token");

@@ -4,23 +4,26 @@ import Header from "../components/Header";
 import TrialQuotaBanner from "../components/TrialQuotaBanner";
 import UploadFile from "../components/UploadFile";
 
-// 1. 增加配额状态
-const [quotaLeft, setQuotaLeft] = useState<number>(0);
 
 const UploadPage: React.FC = () => {
   const [token, setToken] = useState("");
   const [username, setUsername] = useState("");
   const router = useRouter();
+  //1. 增加配额状态
+  const [quotaLeft, setQuotaLeft] = useState<number | null>(null);
 
   useEffect(() => {
-    const t = localStorage.getItem("token");
-    const u = localStorage.getItem("username");
-    if (!t) router.push("/login");
-    else {
-      setToken(t);
-      setUsername(u || "用户");
-    }
-  }, [router]);
+    const t = localStorage.getItem("token") || "";
+    setToken(t);
+
+    // 拉取用户配额
+    fetch("/api/user/quota", {
+      headers: t ? { Authorization: `Bearer ${t}` } : {},
+    })
+      .then(res => res.json())
+      .then(data => setQuotaLeft(data.quotaLeft ?? 0))
+      .catch(() => setQuotaLeft(0));
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");

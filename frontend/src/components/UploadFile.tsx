@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import api from "../api";
 
-interface UploadFileProps {
-  token: string | null;
-  quotaLeft: number | null;
+export interface UploadFileProps {
+  token: string;
+  quotaLeft?: number;
+  onUploaded?: () => void;
 }
+
 
 const UploadFile: React.FC<UploadFileProps> = ({ token, quotaLeft }) => {
   const [file, setFile] = useState<File | null>(null);

@@ -1,45 +1,28 @@
 import React from "react";
-import { useRouter } from "next/router";
+import Link from "next/link";
 
-export default function Header({
-  token,
-  username,
-  onLogout,
-}: {
-  token?: string | null;
-  username?: string | null;
-  onLogout?: () => void;
-}) {
-  const router = useRouter();
-  return (
-    <header className="w-full flex items-center justify-between px-8 py-4 bg-frost/70 backdrop-blur-md shadow-glass rounded-b-2xl border-b border-gray-100 mb-8">
-      <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push("/")}>
-        <img src="/logo192.png" alt="logo" className="h-9 w-9 rounded-full shadow" />
-        <span className="text-xl font-extrabold text-brand tracking-wider drop-shadow-sm">LinguaFlow</span>
-      </div>
-      <nav className="flex items-center gap-6">
-        <a href="/tasks" className="text-gray-700 hover:text-brand font-medium">任务列表</a>
-        {!token ? (
-          <>
-            <button className="px-5 py-2 text-brand font-bold hover:underline" onClick={() => router.push("/login")}>
-              登录
-            </button>
-            <button className="px-5 py-2 rounded-xl bg-brand text-white font-bold shadow hover:bg-brand-dark transition" onClick={() => router.push("/register")}>
-              注册
-            </button>
-          </>
-        ) : (
-          <div className="flex items-center gap-3">
-            <span className="text-gray-500">{username}</span>
-            <button
-              className="px-4 py-2 bg-brand text-white rounded-xl shadow hover:bg-brand-dark transition"
-              onClick={onLogout}
-            >
-              退出登录
-            </button>
-          </div>
-        )}
-      </nav>
-    </header>
-  );
-}
+const Header: React.FC<{ username?: string; onLogout?: () => void; quotaLeft?: number }> = ({ username, onLogout, quotaLeft }) => (
+  <header className="flex items-center justify-between px-8 py-4 shadow bg-white/80 backdrop-blur-lg sticky top-0 z-40 animate-fadein">
+    <Link href="/" className="font-black text-xl tracking-widest text-indigo-700">AI多语种SaaS</Link>
+    <nav className="flex gap-4 items-center">
+      {quotaLeft !== undefined && (
+        <span className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs mr-2">试用剩余 {quotaLeft}</span>
+      )}
+      {username ? (
+        <>
+          <span className="font-bold text-gray-700 mr-2">{username}</span>
+          <Link href="/profile" className="hover:underline">个人中心</Link>
+          <Link href="/plans" className="hover:underline">套餐升级</Link>
+          <button onClick={onLogout} className="ml-4 px-4 py-1 rounded bg-indigo-600 text-white font-bold hover:bg-indigo-800 transition">退出</button>
+        </>
+      ) : (
+        <>
+          <Link href="/login" className="hover:underline font-bold text-indigo-600">登录</Link>
+          <Link href="/register" className="ml-2 hover:underline font-bold text-indigo-600">注册</Link>
+        </>
+      )}
+    </nav>
+  </header>
+);
+
+export default Header;
