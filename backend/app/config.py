@@ -1,10 +1,18 @@
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
+    #REDIS连接信息
+    REDIS_HOST: str = ""
+    REDIS_PORT: int = 6379
+    REDIS_PASSWORD: str = ""
+    REDIS_DB: int = 0
+    CELERY_BROKER_URL: str = "redis://localhost:6379/0"
+    #PORTGRESQL连接信息
+    DATABASE_URL: str = ""
+
+    #企业API_KEY
     TRANSLATE_PROVIDER: str = "baidu"  # baidu/deepl/google/azure/openai
     SECRET_KEY: str = ""
-    DATABASE_URL: str = ""
-    CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     BAIDU_APP_ID: str = ""
     BAIDU_API_KEY: str = ""
     BAIDU_SECRET_KEY: str = ""
