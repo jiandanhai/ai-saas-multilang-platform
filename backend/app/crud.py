@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.models import User, Task
-from app.utils import GeneralUtils, get_db_session
+from app.utils import GeneralUtils, get_db
 from app.schemas import UserCreate
 from passlib.context import CryptContext
 

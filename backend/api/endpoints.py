@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Backgro
 from sqlalchemy.orm import Session
 from app import models, schemas, crud, auth
 from app.crud import send_verify_email
-from app.utils import get_db_session
+from app.utils import get_db
 from services import asr_service, translate_service, tts_service, billing
 from app.tasks import process_pipeline_task
 from pydantic import BaseModel, EmailStr
@@ -29,7 +29,7 @@ async def send_verify_code(req: VerifyCodeRequest, background_tasks: BackgroundT
 
 # 注册接口，带邮箱和验证码校验
 @router.post("/register", response_model=schemas.UserRead)
-def register(user: schemas.UserCreate, code: str, db: Session = Depends(get_db_session)):
+def register(user: schemas.UserCreate, code: str, db: Session = Depends(get_db)):
     # 校验验证码
     real_code = crud.get_email_verify_code(user.email)
     if not real_code or real_code != code:
@@ -41,7 +41,7 @@ def register(user: schemas.UserCreate, code: str, db: Session = Depends(get_db_s
 
 # 登录接口
 @router.post("/login")
-def login(user: schemas.UserLogin, db: Session = Depends(get_db_session)):
+def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_email(db, user.username)
     if not db_user or not crud.verify_password(user.password, db_user.hashed_password):
         raise HTTPException(status_code=400, detail="用户名或密码错误")
@@ -59,7 +59,7 @@ def get_quota(request: Request):
 @router.post("/upload")
 def upload_file(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db_session),
+    db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user)
 ):
     os.makedirs("uploads", exist_ok=True)
@@ -72,7 +72,7 @@ def upload_file(
 
 # -------- 查询任务状态 --------
 @router.get("/task/{task_id}", response_model=schemas.TaskRead)
-def get_task(task_id: int, db: Session = Depends(get_db_session), current_user: models.User = Depends(auth.get_current_user)):
+def get_task(task_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     task = crud.get_task(db, task_id)
     if not task or task.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -80,12 +80,12 @@ def get_task(task_id: int, db: Session = Depends(get_db_session), current_user: 
 
 # -------- 用户任务列表 --------
 @router.get("/my_tasks", response_model=list[schemas.TaskRead])
-def my_tasks(db: Session = Depends(get_db_session), current_user: models.User = Depends(auth.get_current_user)):
+def my_tasks(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     return db.query(models.Task).filter(models.Task.user_id == current_user.id).all()
 
 # -------- 计费与扣费查询 --------
 @router.get("/billing/{task_id}")
-def billing_info(task_id: int, db: Session = Depends(get_db_session), current_user: models.User = Depends(auth.get_current_user)):
+def billing_info(task_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
     task = crud.get_task(db, task_id)
     if not task or task.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Task not found")
