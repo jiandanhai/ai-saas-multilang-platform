@@ -5,25 +5,30 @@ from app.models import User, Task
 from app.utils import GeneralUtils, get_db
 from app.schemas import UserCreate
 from passlib.context import CryptContext
+from fastapi import APIRouter, Depends
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # ORM相关方法
 
-def create_user(db: Session, username: str, password: str, email: str, role: str = "user") -> User:
+def create_user(username: str, password: str, email: str, role: str = "user") -> User:
+    db = Depends(get_db)
     db_user = User(username=username, password=password, email=email, role=role)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
 
-def get_user_by_username(db: Session, username: str) -> User:
+def get_user_by_username(username: str) -> User:
+    db = Depends(get_db)
     return db.query(User).filter(User.username == username).first()
 
-def get_user_by_email(db: Session, email: str) -> User:
+def get_user_by_email(email: str) -> User:
+    db = Depends(get_db)
     return db.query(User).filter(User.email == email).first()
 
-def create_user_with_email(db: Session, user: UserCreate):
+def create_user_with_email(user: UserCreate):
+    db = Depends(get_db)
     db_user = User(username=user.username, email=user.email, hashed_password=pwd_context.hash(user.password))
     db.add(db_user)
     db.commit()
@@ -33,15 +38,21 @@ def create_user_with_email(db: Session, user: UserCreate):
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
-def create_task(db: Session, file_path: str, user_id: int) -> int:
+def create_task(file_path: str, user_id: int) -> int:
+    db = Depends(get_db)
     task = Task(file_path=file_path, user_id=user_id)
     db.add(task)
     db.commit()
     db.refresh(task)
     return task.id
 
-def get_task(db: Session, task_id: int) -> Task:
+def get_task(task_id: int) -> Task:
+    db = Depends(get_db)
     return db.query(Task).filter(Task.id == task_id).first()
+
+def get_tasks(task: Task, current_user_id: int):
+    db = Depends(get_db)
+    return db.query(task).filter(task.user_id == current_user_id).all()
 
 # Redis存储配额
 QUOTA_KEY_PREFIX = "saas_quota:"

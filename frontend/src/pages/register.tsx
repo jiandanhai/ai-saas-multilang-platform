@@ -21,7 +21,7 @@ const Register: React.FC = () => {
     setError("");
     setCodeLoading(true);
     try {
-      await api.post("/user/send_verify_code", { email });
+      await api.post("/user/send-verify-code", { email });
     } catch {
       setError("验证码发送失败，请稍后重试");
       setShake(true); setTimeout(() => setShake(false), 500);
