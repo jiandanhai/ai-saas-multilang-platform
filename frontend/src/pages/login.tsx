@@ -1,88 +1,80 @@
 import React, { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/router";
 import api from "../api";
+import Header from "../components/Header";
 
-export default function LoginPage() {
-  const [email, setEmail] = useState("");
+const Login: React.FC = () => {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [shake, setShake] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
 
-  async function handleLogin(e: React.FormEvent) {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    if (!email || !password) {
-      setError("请输入邮箱和密码");
-      return;
-    }
     setLoading(true);
+    setError("");
     try {
-      const res = await api.post("/user/login", { email, password });
-      localStorage.setItem("token", res.data.token);
-      window.location.href = "/";
-    } catch (e: any) {
-      setError(e?.response?.data?.msg || "登录失败");
+      const { data } = await api.post("/user/login", { username, password });
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("username", username);
+      router.push("/");
+    } catch (err: any) {
+      setError("登录失败，账号或密码错误");
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
     }
     setLoading(false);
-  }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="w-full max-w-md bg-white/80 rounded-2xl shadow-2xl p-10 flex flex-col gap-6 animate-fadein">
-        <h1 className="text-3xl font-extrabold text-center bg-gradient-to-r from-blue-600 via-fuchsia-600 to-pink-600 bg-clip-text text-transparent mb-2">AI多语言智能平台</h1>
-        <form className="flex flex-col gap-4" onSubmit={handleLogin}>
+    <div className="min-h-screen bg-gradient-to-br from-brand/10 to-frost flex flex-col">
+      <Header />
+      <main className="flex flex-1 items-center justify-center">
+        <form
+          className={`bg-white dark:bg-gray-900/80 p-10 rounded-2xl shadow-xl w-full max-w-md space-y-6 border border-gray-100 animate-fadein ${shake ? "animate-shake" : ""}`}
+          onSubmit={handleLogin}
+        >
+          <h2 className="text-2xl font-bold text-brand text-center mb-4">欢迎登录</h2>
+          {error && <div className="text-red-500 text-sm mb-2 text-center">{error}</div>}
           <input
-            className="px-4 py-2 rounded-lg border focus:ring-2 focus:ring-fuchsia-400 outline-none transition"
-            placeholder="邮箱"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            autoComplete="email"
+            className="w-full px-4 py-3 border rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand focus:outline-none"
+            placeholder="用户名/邮箱/手机号"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            autoFocus
           />
           <input
-            className="px-4 py-2 rounded-lg border focus:ring-2 focus:ring-fuchsia-400 outline-none transition"
+            className="w-full px-4 py-3 border rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand focus:outline-none"
             placeholder="密码"
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            autoComplete="current-password"
           />
-          {error && (
-            <div className="text-red-500 text-center text-sm font-bold animate-shake">{error}</div>
-          )}
+          <div className="flex justify-between items-center text-xs text-gray-400">
+            <span>
+              登录即同意
+              <a href="/terms" className="text-brand underline ml-1" target="_blank">服务协议</a>
+            </span>
+            <a href="/register" className="text-brand underline">还没有账号？注册</a>
+          </div>
           <button
-            className="w-full py-2 rounded-lg bg-gradient-to-r from-blue-500 via-fuchsia-500 to-pink-500 text-white font-bold shadow-md hover:scale-105 transition disabled:opacity-60"
+            className={`w-full py-3 rounded-xl font-bold bg-brand text-white hover:bg-indigo-700 transition mt-2 ${loading ? "opacity-50 cursor-wait" : ""}`}
             type="submit"
             disabled={loading}
           >
             {loading ? "登录中..." : "登录"}
           </button>
+          <div className="flex gap-3 items-center mt-3 justify-center">
+            <span className="text-gray-400 text-xs">第三方登录:</span>
+            <button type="button" className="px-3 py-1 rounded border bg-white shadow hover:bg-frost">微信</button>
+            <button type="button" className="px-3 py-1 rounded border bg-white shadow hover:bg-frost">Google</button>
+            {/* ...可拓展 */}
+          </div>
         </form>
-        <div className="flex flex-col gap-2 text-center text-sm text-gray-500">
-          <span>
-            没有账号？
-            <Link href="/register" className="text-fuchsia-600 ml-1 font-bold hover:underline">
-              注册
-            </Link>
-          </span>
-          <span>
-            忘记密码？<a className="text-blue-500 hover:underline cursor-pointer" href="#">重置</a>
-          </span>
-        </div>
-        <div className="flex items-center justify-center gap-4 my-2">
-          <span className="h-px bg-gray-200 flex-1" />
-          <span className="text-xs text-gray-400">或</span>
-          <span className="h-px bg-gray-200 flex-1" />
-        </div>
-        <div className="flex justify-center gap-3">
-          {/* 可集成三方登录：Google/微信/钉钉等 */}
-          <button className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center shadow">
-            <img src="/google-icon.svg" alt="Google" className="w-6 h-6" />
-          </button>
-          {/* <button className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center shadow">
-            <img src="/wechat-icon.svg" alt="微信" className="w-6 h-6" />
-          </button> */}
-        </div>
-      </div>
+      </main>
     </div>
   );
-}
+};
+export default Login;

@@ -1,3 +1,5 @@
+from typing import LiteralString
+
 from sqlalchemy.orm import Session
 from app.models import User, Task
 from app.utils import GeneralUtils, get_db
@@ -76,3 +78,6 @@ def set_email_verify_code(email: str, code: str, expire: int = 300):
 
 def get_email_verify_code(email: str) -> str:
     return GeneralUtils.get(f"{VERIFY_KEY_PREFIX}{email}")
+
+def set_captcha_img( img_chars: str):
+    GeneralUtils.set(f"captcha:{img_chars.lower()}", img_chars, ex=120)

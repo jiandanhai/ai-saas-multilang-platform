@@ -4,6 +4,7 @@ module.exports = {
     "./src/**/*.{js,ts,jsx,tsx}",
     "./pages/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: "class", // 开启暗黑模式
   theme: {
     extend: {
       colors: {
@@ -15,6 +16,7 @@ module.exports = {
       },
       animation: {
         fadein: "fadein 0.25s linear",
+        shake: "shake 0.3s cubic-bezier(.36,.07,.19,.97) both",
         pop: "pop 0.2s cubic-bezier(.8,2,.6,1)",
       },
       keyframes: {
@@ -22,10 +24,11 @@ module.exports = {
           from: { opacity: 0 },
           to: { opacity: 1 }
         },
-      shake: {
-          '0%, 100%': { transform: 'translateX(0)' },
-          '20%, 60%': { transform: 'translateX(-8px)' },
-          '40%, 80%': { transform: 'translateX(8px)' }
+        shake: {
+          '10%, 90%': { transform: 'translateX(-1px)' },
+          '20%, 80%': { transform: 'translateX(2px)' },
+          '30%, 50%, 70%': { transform: 'translateX(-4px)' },
+          '40%, 60%': { transform: 'translateX(4px)' }
         },
       },
     },

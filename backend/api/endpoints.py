@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks, Request
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks, Request,Response
 from sqlalchemy.orm import Session
 from app import models, schemas, crud, auth
 from app.crud import send_verify_email
@@ -8,6 +8,7 @@ from app.tasks import process_pipeline_task
 from pydantic import BaseModel, EmailStr
 import os, shutil, random, string
 from app.config import settings
+from captcha.image import ImageCaptcha
 
 router = APIRouter(prefix="/user")
 # SaaS试用配额配置
@@ -91,3 +92,11 @@ def billing_info(task_id: int, db: Session = Depends(get_db), current_user: mode
         raise HTTPException(status_code=404, detail="Task not found")
     cost = billing.calculate_cost(task)
     return {"task_id": task_id, "cost": cost}
+
+@router.get("/captcha_img")
+async def get_captcha_img():
+    chars = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+    img = ImageCaptcha(width=160, height=60)
+    img_data = img.generate(chars).getvalue()
+    crud.set_captcha_img(f"captcha:{chars.lower()}", chars, ex=120)
+    return Response(content=img_data, media_type="image/png")
