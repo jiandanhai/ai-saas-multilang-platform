@@ -14,11 +14,18 @@ module.exports = {
         glass: "0 8px 32px 0 rgba(90, 98, 192, 0.15)",
       },
       animation: {
-        fadein: "fadeIn 0.5s ease",
+        fadein: "fadein 0.25s linear",
+        pop: "pop 0.2s cubic-bezier(.8,2,.6,1)",
       },
       keyframes: {
         fadein: {
-          from: { opacity: 0 }, to: { opacity: 1 }
+          from: { opacity: 0 },
+          to: { opacity: 1 }
+        },
+      shake: {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '20%, 60%': { transform: 'translateX(-8px)' },
+          '40%, 80%': { transform: 'translateX(8px)' }
         },
       },
     },

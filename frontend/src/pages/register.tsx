@@ -1,136 +1,139 @@
 import React, { useState } from "react";
-import { useRouter } from "next/router";
-import api from "../api";
 import Link from "next/link";
+import api from "../api";
 
-const Register: React.FC = () => {
+export default function RegisterPage() {
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
   const [code, setCode] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [agreement, setAgreement] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [sending, setSending] = useState(false);
+  const [agreed, setAgreed] = useState(false);
 
-  const router = useRouter();
+  const [sending, setSending] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   // 发送验证码
-  const handleSendCode = async () => {
-    if (!email) {
-      setError("请输入邮箱");
+  async function handleSendCode() {
+    setError("");
+    if (!email.match(/^[\w\-\.]+@[\w\-]+\.[a-zA-Z]{2,}$/)) {
+      setError("请输入有效邮箱！");
       return;
     }
-    setError("");
     setSending(true);
     try {
-      await api.post("/user/send_code", { email });
-      setSuccess("验证码已发送，请查收邮箱");
+      await api.post("/user/send-verify-code", { email });
+      setCountdown(60);
+      const timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setSending(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
     } catch (e: any) {
-      setError(e?.response?.data?.detail || "验证码发送失败");
+      setError(e?.response?.data?.msg || "验证码发送失败！");
+      setSending(false);
     }
-    setSending(false);
-  };
+  }
 
-  // 提交注册
-  const handleSubmit = async (e: React.FormEvent) => {
+  // 注册
+  async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setSuccess("");
-    if (!agreement) {
-      setError("请同意服务协议");
+    if (!email || !username || !password || !code) {
+      setError("请填写全部信息");
+      return;
+    }
+    if (!agreed) {
+      setError("请先同意服务协议");
       return;
     }
     setLoading(true);
     try {
-      await api.post("/user/register", { username, email, code, password });
-      setSuccess("注册成功，请登录");
-      setTimeout(() => router.push("/login"), 1200);
+      await api.post("/user/register", { email, code, username, password });
+      window.location.href = "/login";
     } catch (e: any) {
-      setError(e?.response?.data?.detail || "注册失败");
+      setError(e?.response?.data?.msg || "注册失败");
     }
     setLoading(false);
-  };
+  }
 
   return (
-    <main className="flex min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 items-center justify-center animate-fadein">
-      <form
-        className="bg-white/90 rounded-2xl p-8 shadow-2xl w-full max-w-md space-y-6 backdrop-blur-md"
-        onSubmit={handleSubmit}
-      >
-        <h1 className="text-2xl font-extrabold text-center text-brand">账号注册</h1>
-        <div className="space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-pink-50">
+      <div className="w-full max-w-md bg-white/80 rounded-2xl shadow-2xl p-10 flex flex-col gap-6 animate-fadein">
+        <h1 className="text-3xl font-extrabold text-center bg-gradient-to-r from-blue-600 via-fuchsia-600 to-pink-600 bg-clip-text text-transparent mb-2">账号注册</h1>
+        <form className="flex flex-col gap-4" onSubmit={handleRegister}>
           <input
-            type="email"
-            className="input w-full"
+            className="px-4 py-2 rounded-lg border focus:ring-2 focus:ring-fuchsia-400 outline-none transition"
             placeholder="邮箱"
-            autoComplete="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
-            required
+            autoComplete="email"
           />
           <div className="flex gap-2">
             <input
-              type="text"
-              className="input flex-1"
+              className="flex-1 px-4 py-2 rounded-lg border focus:ring-2 focus:ring-fuchsia-400 outline-none transition"
               placeholder="验证码"
               value={code}
               onChange={e => setCode(e.target.value)}
-              required
             />
             <button
               type="button"
-              className={`btn btn-sm ${sending ? "opacity-50 pointer-events-none" : ""}`}
+              disabled={sending || countdown > 0}
               onClick={handleSendCode}
-              disabled={sending}
+              className="px-3 py-2 rounded-lg bg-fuchsia-500 text-white hover:bg-fuchsia-600 font-bold shadow-md transition disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
-              {sending ? "发送中..." : "获取验证码"}
+              {countdown > 0 ? `${countdown}秒后重发` : "获取验证码"}
             </button>
           </div>
           <input
-            type="text"
-            className="input w-full"
+            className="px-4 py-2 rounded-lg border focus:ring-2 focus:ring-fuchsia-400 outline-none transition"
             placeholder="用户名"
-            autoComplete="username"
             value={username}
             onChange={e => setUsername(e.target.value)}
-            required
+            autoComplete="username"
           />
           <input
-            type="password"
-            className="input w-full"
+            className="px-4 py-2 rounded-lg border focus:ring-2 focus:ring-fuchsia-400 outline-none transition"
             placeholder="密码"
-            autoComplete="new-password"
+            type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            required
+            autoComplete="new-password"
           />
+          <label className="flex items-center gap-2 text-gray-600 text-sm select-none">
+            <input
+              type="checkbox"
+              className="accent-fuchsia-500"
+              checked={agreed}
+              onChange={e => setAgreed(e.target.checked)}
+            />
+            我已阅读并同意
+            <a href="/terms" className="text-fuchsia-600 hover:underline ml-1" target="_blank">服务协议</a>
+          </label>
+          {error && (
+            <div className="text-red-500 text-center text-sm font-bold animate-shake">{error}</div>
+          )}
+          <button
+            className="w-full py-2 rounded-lg bg-gradient-to-r from-blue-500 via-fuchsia-500 to-pink-500 text-white font-bold shadow-md hover:scale-105 transition disabled:opacity-60"
+            type="submit"
+            disabled={loading}
+          >
+            {loading ? "注册中..." : "注册"}
+          </button>
+        </form>
+        <div className="text-center text-sm text-gray-500">
+          已有账号？
+          <Link href="/login" className="text-fuchsia-600 ml-1 font-bold hover:underline">
+            登录
+          </Link>
         </div>
-        <label className="flex items-center gap-2 text-xs text-gray-600 mt-2">
-          <input
-            type="checkbox"
-            checked={agreement}
-            onChange={e => setAgreement(e.target.checked)}
-          />
-          我已阅读并同意
-          <Link href="/terms" className="underline text-brand ml-1" target="_blank">服务协议</Link>
-        </label>
-        {error && <div className="text-red-500 text-xs text-center">{error}</div>}
-        {success && <div className="text-green-500 text-xs text-center">{success}</div>}
-        <button
-          type="submit"
-          className={`btn w-full mt-2 ${loading ? "opacity-60 pointer-events-none" : ""}`}
-          disabled={loading}
-        >
-          {loading ? "注册中…" : "注册"}
-        </button>
-        <div className="text-center text-xs mt-2 text-gray-500">
-          已有账号？<Link href="/login" className="underline text-brand ml-1">登录</Link>
-        </div>
-      </form>
-    </main>
+      </div>
+    </div>
   );
-};
-
-export default Register;
+}

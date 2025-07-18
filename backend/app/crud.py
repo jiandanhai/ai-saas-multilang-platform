@@ -51,6 +51,11 @@ VERIFY_KEY_PREFIX = "verify_code:"
 def send_verify_email(email, code):
     GeneralUtils.send_verify_email(f"{QUOTA_KEY_PREFIX}{email}", code)
 
+
+def get_trial_quota(ip: str) -> int:
+    val = GeneralUtils.get_trial_quota(f"{QUOTA_KEY_PREFIX}{ip}")
+    return int(val) if val is not None else 0
+
 def get_user_quota(user_id: str) -> int:
     val = GeneralUtils.get(f"{QUOTA_KEY_PREFIX}{user_id}")
     return int(val) if val is not None else 0

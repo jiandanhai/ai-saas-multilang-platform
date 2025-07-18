@@ -9,7 +9,7 @@ from pydantic import BaseModel, EmailStr
 import os, shutil, random, string
 from app.config import settings
 
-router = APIRouter()
+router = APIRouter(prefix="/user")
 # SaaS试用配额配置
 REGISTERED_QUOTA = 50
 

@@ -119,6 +119,8 @@
 ### 6. 其它常见运维操作
     容器停止：sudo docker-compose down
     清理卷（慎用，数据会丢失）：sudo docker-compose down -v
+    清理 Docker 构建遗留垃圾：docker system prune -af --volumes
+    清理宿主机无用大文件、日志：sudo journalctl --vacuum-time=3d --系统日志仅保留三天 ，  清空临时目录： rm -rf /tmp/* ，清空 pip/npm 缓存：rm -rf ~/.cache/*
     进入容器调试：
     sudo docker-compose exec backend /bin/bash
     sudo docker-compose exec postgres bash
