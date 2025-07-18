@@ -1,16 +1,12 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-// @ts-ignore
-import logoImg from "@/public/icons/logo-512.png";
-// @ts-ignore
-import brandImg from "@/public/icons/logopng.png";
 
 const Header: React.FC<{ username?: string; onLogout?: () => void; quotaLeft?: number }> = ({ username, onLogout, quotaLeft }) => (
   <header className="flex items-center justify-between px-8 py-4 shadow bg-white/80 dark:bg-gray-900/80 backdrop-blur-lg sticky top-0 z-40 animate-fadein">
       <div className="flex items-center gap-3">
-        <Image src={logoImg} alt="Logo" width={40} height={40} />
-        <Image src={brandImg} alt="LinguaFlow" width={130} height={40} />
+        <Image src="/icons/logo-512.png" alt="Logo" width={40} height={40} />
+        <Image src="/icons/logopng.png" alt="LinguaFlow" width={130} height={40} />
       </div>
     <Link href="/" className="font-black text-xl tracking-widest text-indigo-700 dark:text-white">AI多语种SaaS</Link>
     <nav className="flex gap-4 items-center">
