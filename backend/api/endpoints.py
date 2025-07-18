@@ -8,6 +8,11 @@ from pydantic import BaseModel, EmailStr
 import os, shutil, random, string
 from app.config import settings
 from captcha.image import ImageCaptcha
+from fastapi.responses import JSONResponse
+from jose import JWTError, jwt
+from typing import Optional
+from app import crud, models, schemas
+import uuid
 
 router = APIRouter(prefix="/user")
 # SaaS试用配额配置
@@ -18,6 +23,22 @@ def random_code(n=6):
 
 class VerifyCodeRequest(BaseModel):
     email: EmailStr
+
+TRIAL_QUOTA_KEY_PREFIX = "trial_quota:ip"
+QUOTA_KEY_PREFIX = "user_quota"
+VERIFY_KEY_PREFIX = "verify_code"
+
+def get_current_user(request: Request) -> Optional[models.User]:
+    token = request.headers.get("Authorization")
+    if not token:
+        return None
+    try:
+        scheme, _, param = token.partition(" ")
+        payload = jwt.decode(param, settings.SECRET_KEY, algorithms=["HS256"])
+        user = crud.get_user(models.User, payload["user_id"])
+        return user
+    except Exception:
+        return None
 
 #邮箱验证码发送
 @router.post("/send-verify-code")
@@ -48,25 +69,63 @@ def login(user: schemas.UserLogin):
     # 返回token略
     return {"token": "TODO_GENERATE_TOKEN"}
 
-# 试用配额查询（假设未登录可匿名查剩余额度）
-# 获取试用配额
+
+#获取当前用户或游客配额信息，支持未登录试用,未登录可匿名查剩余额度
 @router.get("/quota")
 def get_quota(request: Request):
-    ip = request.client.host
-    quota = crud.get_trial_quota(ip)
-    return {"quota_remain": quota, "quota_total": settings.FREE_TRIAL_QUOTA}
+    user = get_current_user(request)
+    if user:
+        key =  f"{QUOTA_KEY_PREFIX}:{user.id}"
+    else:
+        # 匿名用户用 ip/session 作 key（示例用 ip）
+        ip = request.client.host
+        key = f"{TRIAL_QUOTA_KEY_PREFIX}:{ip}"
+    # 查用量
+    used = int(crud.get_quota(key))or 0
+
+    # 付费/高级用户无限制
+    max_quota = settings.FREE_TRIAL_QUOTA if not user or user.role == "user" else 99999
+    left = max_quota - used
+    return {"quotaLeft": max(left, 0), "maxQuota": max_quota}
+
 # -------- 文件上传并触发AI流水线 --------
-@router.post("/upload")
+@router.post("/upload", response_model=schemas.TaskRead)
 def upload_file(
-    file: UploadFile = File(...),
-    current_user: models.User = Depends(auth.get_current_user)
+    request: Request,
+    file: UploadFile = File(...)
 ):
-    os.makedirs("uploads", exist_ok=True)
-    file_path = os.path.join("uploads", file.filename)
-    with open(file_path, "wb") as f:
-        shutil.copyfileobj(file.file, f)
-    task_id = crud.create_task(file_path=file_path, user_id=current_user.id)
+    """
+    上传文件，配额控制（支持未登录试用/登录用户）
+    """
+    user = get_current_user(request)
+    if user:
+        key = f"{QUOTA_KEY_PREFIX}:{user.id}"
+        role = user.role
+    else:
+        ip = request.client.host
+        key = f"{TRIAL_QUOTA_KEY_PREFIX}:{ip}"
+        role = "user"
+
+        used = int(crud.get_quota(key))or 0
+        max_quota = settings.FREE_TRIAL_QUOTA if not user or role == "user" else 99999
+        if used >= max_quota:
+            raise HTTPException(status_code=403, detail="已用完免费额度，请注册/登录/付费后继续使用。")
+        # 文件存储逻辑（按需存到本地/云端/DB）
+        filename = f"{uuid.uuid4().hex}_{file.filename}"
+        save_dir = settings.UPLOAD_DIR if hasattr(settings, "UPLOAD_DIR") else "uploads"
+        os.makedirs(save_dir, exist_ok=True)
+        file_path = os.path.join(save_dir, filename)
+        with open(file_path, "wb") as f:
+            f.write(file.file.read())
+        #with open(file_path, "wb") as f:
+        #    shutil.copyfileobj(file.file, f)
+
+    task_id = crud.create_task(file_path=file_path, user_id=user.id if user else None)
+    crud.incr_user_quota(key,1)
     process_pipeline_task.delay(task_id)
+    if not user:
+        # 游客配额1小时清空（防刷）
+        crud.expire_user_quota(key, 3600)
     return {"task_id": task_id}
 
 # -------- 查询任务状态 --------

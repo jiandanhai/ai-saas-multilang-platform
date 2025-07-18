@@ -4,6 +4,7 @@ from app import crud, models
 from app.utils import get_db
 from sqlalchemy.orm import Session
 from app.config import settings
+from fastapi import Depends
 
 celery_app = Celery('tasks', broker=settings.CELERY_BROKER_URL)
 
@@ -12,7 +13,7 @@ def process_pipeline_task(self, task_id: int):
     """
     商业SaaS典型AI流水线：ASR->翻译->TTS->状态更新。每步异常自动重试。
     """
-    db: Session = next(get_db())
+    db: Session = next(Depends(get_db))
     try:
         # 1. 拿任务信息
         task = crud.get_task(db, task_id)

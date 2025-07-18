@@ -1,0 +1,27 @@
+-- 用户表
+CREATE TABLE IF NOT EXISTS "user" (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(64) UNIQUE NOT NULL,
+    email VARCHAR(120) UNIQUE NOT NULL,
+    password VARCHAR(256) NOT NULL,
+    role VARCHAR(32) DEFAULT 'user',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 任务表
+CREATE TABLE IF NOT EXISTS "task" (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES "user"(id) ON DELETE CASCADE,
+    filename VARCHAR(256),
+    status VARCHAR(32) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    result TEXT
+);
+
+-- 邮箱验证码表（如需DB持久化，否则建议Redis缓存即可）
+CREATE TABLE IF NOT EXISTS email_code (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(120) NOT NULL,
+    code VARCHAR(16) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

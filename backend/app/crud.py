@@ -6,10 +6,15 @@ from app.utils import GeneralUtils, get_db
 from app.schemas import UserCreate
 from passlib.context import CryptContext
 from fastapi import APIRouter, Depends
+from typing import Optional
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # ORM相关方法
+def get_user(user: User,user_id) -> Optional[User]:
+    db = Depends(get_db)
+    user = db.query(user).filter_by(user_id).first()
+    return user
 
 def create_user(username: str, password: str, email: str, role: str = "user") -> User:
     db = Depends(get_db)
@@ -55,40 +60,35 @@ def get_tasks(task: Task, current_user_id: int):
     return db.query(task).filter(task.user_id == current_user_id).all()
 
 # Redis存储配额
-QUOTA_KEY_PREFIX = "saas_quota:"
-VERIFY_KEY_PREFIX = "verify_code:"
-
-# 以下方法全部通过 RedisUtils 工具类实现
 
 # ===== 邮箱验证码/邮件发送相关 =====
-def send_verify_email(email, code):
-    GeneralUtils.send_verify_email(f"{QUOTA_KEY_PREFIX}{email}", code)
+def send_verify_email(key: str, code: str):
+    GeneralUtils.send_verify_email(key, code)
 
 
-def get_trial_quota(ip: str) -> int:
-    val = GeneralUtils.get_trial_quota(f"{QUOTA_KEY_PREFIX}{ip}")
+def get_user_quota(key: str) -> int:
+    val = GeneralUtils.get_quota(key)
     return int(val) if val is not None else 0
 
-def get_user_quota(user_id: str) -> int:
-    val = GeneralUtils.get(f"{QUOTA_KEY_PREFIX}{user_id}")
-    return int(val) if val is not None else 0
+def set_user_quota(key: str, quota: int):
+    GeneralUtils.set(key, quota)
 
-def set_user_quota(user_id: str, quota: int):
-    GeneralUtils.set(f"{QUOTA_KEY_PREFIX}{user_id}", quota)
+def incr_user_quota(key: str, amount: int = 1):
+    GeneralUtils.incrby(key, amount)
 
-def incr_user_quota(user_id: str, amount: int = 1):
-    GeneralUtils.incrby(f"{QUOTA_KEY_PREFIX}{user_id}", amount)
+def expire_user_quota(key: str, time: int = 1):
+    GeneralUtils.expire(key, time)
 
-def decr_user_quota(user_id: str, amount: int = 1):
-    GeneralUtils.decrby(f"{QUOTA_KEY_PREFIX}{user_id}", amount)
+def decr_user_quota(key: str, amount: int = 1):
+    GeneralUtils.decrby(key, amount)
 
 # 验证码：5分钟有效
 
-def set_email_verify_code(email: str, code: str, expire: int = 300):
-    GeneralUtils.setex(f"{VERIFY_KEY_PREFIX}{email}", expire, code)
+def set_email_verify_code(key: str, code: str, expire: int = 300):
+    GeneralUtils.setex(key, expire, code)
 
-def get_email_verify_code(email: str) -> str:
-    return GeneralUtils.get(f"{VERIFY_KEY_PREFIX}{email}")
+def get_email_verify_code(key: str) -> str:
+    return GeneralUtils.get(key)
 
 def set_captcha_img( img_chars: str):
     GeneralUtils.set(f"captcha:{img_chars.lower()}", img_chars, ex=120)

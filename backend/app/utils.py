@@ -10,6 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from email.header import Header
 import smtplib
+from jose import jwt
 
 # ----------- 通用工具类 -----------
 class GeneralUtils:
@@ -20,6 +21,13 @@ class GeneralUtils:
         if not cls._redis:
             cls._redis = redis.StrictRedis.from_url(settings.CELERY_BROKER_URL, decode_responses=True)
         return cls._redis
+
+    def decode_jwt_token(token: str):
+        try:
+            # 替换为你的SECRET和算法
+            return jwt.decode(token, "your-secret", algorithms=["HS256"])
+        except Exception:
+            return None
 
     @classmethod
     def save_email_code(cls, email, code, expire=300):
@@ -32,9 +40,8 @@ class GeneralUtils:
         return r.get(f"email_code:{email}")
 
     @classmethod
-    def get_trial_quota(cls, ip):
+    def get_quota(cls, key):
         r = cls.get_client()
-        key = f"trial_quota:{ip}"
         val = r.get(key)
         if val is None:
             r.set(key, settings.FREE_TRIAL_QUOTA, ex=86400)
@@ -90,6 +97,11 @@ class GeneralUtils:
     def decrby(cls, key: str, amount: int = 1):
         r = cls.get_client()
         return r.decrby(key, amount)
+
+    @classmethod
+    def expire(cls, key: str, time: int,):
+        r = cls.get_client()
+        return r.expire(key, time)
 
     @classmethod
     def setex(cls, key: str, time: int, value: Any):
