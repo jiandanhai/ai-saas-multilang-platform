@@ -8,25 +8,21 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        brand: "#4F46E5", // 统一主色
-        frost: "#F0F4FF",
+        brand: "#2267c6", // 你品牌主色
+        "brand-dark": "#164e8e",
       },
       boxShadow: {
         glass: "0 8px 32px 0 rgba(90, 98, 192, 0.15)",
       },
       animation: {
-        fadein: "fadein 0.4s ease-in",
+        fadein: "fadein 0.5s",
       },
       keyframes: {
         fadein: {
-          "0%": { opacity: "0", transform: "translateY(-20px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
+          "0%": { opacity: 0, transform: "translateY(-10px)" },
+          "100%": { opacity: 1, transform: "translateY(0)" },
         },
       },
-      colors: {
-        brand: "#234be7",
-        "brand-dark": "#1b338b",
-      }
     },
   },
   plugins: [],

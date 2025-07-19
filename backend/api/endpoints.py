@@ -44,7 +44,9 @@ def get_current_user(request: Request) -> Optional[models.User]:
 @router.post("/send-verify-code")
 async def send_verify_code(req: VerifyCodeRequest, background_tasks: BackgroundTasks):
     code = random_code(6)
-    crud.set_email_verify_code(req.email, code, expire=300)
+    key = f"{VERIFY_KEY_PREFIX}:{req.email}"
+    crud.set_email_verify_code(key, code, expire=300)
+    print("存储邮箱验证码成功！key："+key +"->"+ code)
     background_tasks.add_task(send_verify_email, req.email, code)
     return {"success": True, "message": "验证码发送成功"}
 
@@ -52,7 +54,8 @@ async def send_verify_code(req: VerifyCodeRequest, background_tasks: BackgroundT
 @router.post("/register", response_model=schemas.UserRead)
 def register(user: schemas.UserCreate, code: str):
     # 校验验证码
-    real_code = crud.get_email_verify_code(user.email)
+    key = f"{VERIFY_KEY_PREFIX}:{user.email}"
+    real_code = crud.get_email_verify_code(key)
     if not real_code or real_code != code:
         raise HTTPException(status_code=400, detail="验证码错误或已过期")
     db_user = crud.get_user_by_email(user.email)
@@ -81,7 +84,7 @@ def get_quota(request: Request):
         ip = request.client.host
         key = f"{TRIAL_QUOTA_KEY_PREFIX}:{ip}"
     # 查用量
-    used = int(crud.get_quota(key))or 0
+    used = int(crud.get_user_quota(key))or 0
 
     # 付费/高级用户无限制
     max_quota = settings.FREE_TRIAL_QUOTA if not user or user.role == "user" else 99999
