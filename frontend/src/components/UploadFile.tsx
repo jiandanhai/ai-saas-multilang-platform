@@ -3,6 +3,7 @@ import React, { useRef, useState } from "react";
 interface UploadFileProps {
   token?: string | null;
   quotaLeft?: number | null;
+  disabled?: boolean;
 }
 
 const UploadFile: React.FC<UploadFileProps> = ({ token, quotaLeft }) => {
