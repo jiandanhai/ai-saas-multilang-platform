@@ -11,7 +11,7 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     setToken(localStorage.getItem("token"));
     setUsername(localStorage.getItem("username"));
-    fetch("/api/user/trial_quota")
+    fetch("/api/user/quota")
       .then(res => res.json())
       .then(data => setQuotaLeft(data.quotaLeft ?? 0))
       .catch(() => setQuotaLeft(0));
