@@ -40,7 +40,7 @@ class GeneralUtils:
         return r.get(f"email_code:{email}")
 
     @classmethod
-    def get_quota(cls, key):
+    def get_user_quota(cls, key):
         r = cls.get_client()
         val = r.get(key)
         if val is None:
@@ -65,11 +65,20 @@ class GeneralUtils:
         msg['Subject'] = Header(subject, 'utf-8')
         msg['From'] = settings.MAIL_FROM
         msg['To'] = email
+        print(f"要发送邮件: {msg}")
         try:
-            smtp = smtplib.SMTP_SSL(settings.MAIL_SERVER, settings.MAIL_PORT)
+            if settings.MAIL_PORT == 465:
+                # SSL 方式（如 QQ 邮箱）
+                smtp = smtplib.SMTP_SSL(settings.MAIL_SERVER, settings.MAIL_PORT)
+            else:
+                # STARTTLS 方式（如 Outlook/企业邮箱）
+                smtp = smtplib.SMTP(settings.MAIL_SERVER, settings.MAIL_PORT)
+                smtp.ehlo()
+                smtp.starttls()
             smtp.login(settings.MAIL_USERNAME, settings.MAIL_PASSWORD)
             smtp.sendmail(settings.MAIL_FROM, [email], msg.as_string())
             smtp.quit()
+            print("要发送邮件成功!")
         except Exception as e:
             print(f"邮件发送失败: {e}")
 

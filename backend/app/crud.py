@@ -62,12 +62,12 @@ def get_tasks(task: Task, current_user_id: int):
 # Redis存储配额
 
 # ===== 邮箱验证码/邮件发送相关 =====
-def send_verify_email(key: str, code: str):
-    GeneralUtils.send_verify_email(key, code)
+def send_verify_email(email: str, code: str):
+    GeneralUtils.send_verify_email(email, code)
 
 
 def get_user_quota(key: str) -> int:
-    val = GeneralUtils.get_quota(key)
+    val = GeneralUtils.get_user_quota(key)
     return int(val) if val is not None else 0
 
 def set_user_quota(key: str, quota: int):
