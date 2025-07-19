@@ -19,7 +19,6 @@ class Settings(BaseSettings):
     AZURE_REGION: str = "eastasia"
     OPENAI_API_KEY: str = ""
 
-    FREE_TRIAL_LIMIT: int = 10
     FREE_TRIAL_QUOTA: int = 0
 
     # 用户注册相关

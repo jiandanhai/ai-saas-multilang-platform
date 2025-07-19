@@ -45,7 +45,8 @@ class GeneralUtils:
         val = r.get(key)
         if val is None:
             r.set(key, settings.FREE_TRIAL_QUOTA, ex=86400)
-            return settings.FREE_TRIAL_QUOTA
+            val = settings.FREE_TRIAL_QUOTA
+        print(f"#val-->{val}")
         return int(val)
 
     @classmethod

@@ -11,10 +11,14 @@ const HomePage: React.FC = () => {
   const [quotaError, setQuotaError] = useState<string | null>(null);
 
   useEffect(() => {
-    setToken(localStorage.getItem("token"));
-    setUsername(localStorage.getItem("username"));
+  const t = localStorage.getItem("token");
+  setToken(t);
+  setUsername(localStorage.getItem("username"));
 
-    fetch("/api/user/quota").then(async res => {
+  fetch("/api/user/quota", {
+    headers: t ? { Authorization: `Bearer ${t}` } : undefined,
+  })
+    .then(async (res) => {
       if (res.ok) {
         const data = await res.json();
         setQuotaLeft(data.quotaLeft ?? 0);
@@ -25,11 +29,12 @@ const HomePage: React.FC = () => {
         setQuotaLeft(0);
         setQuotaError("配额查询失败，请稍后重试。");
       }
-    }).catch(() => {
+    })
+    .catch(() => {
       setQuotaLeft(0);
       setQuotaError("配额接口异常，请检查网络。");
     });
-  }, []);
+}, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -38,7 +43,7 @@ const HomePage: React.FC = () => {
     setUsername(null);
   };
 
-  if (token === null || quotaLeft === null) {
+  if (quotaLeft === null) {
     // 首次进入还没拉到数据，展示loading
     return (
       <div className="flex justify-center items-center h-screen text-xl">Loading...</div>

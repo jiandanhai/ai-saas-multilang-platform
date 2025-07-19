@@ -6,8 +6,6 @@ import uuid, os
 from app.crud import get_user_quota, set_user_quota
 from app.config import settings
 
-FREE_TRIAL_LIMIT = int(settings.FREE_TRIAL_LIMIT)
-
 class QuotaMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         user_id = getattr(request.state, "user_id", None)
@@ -19,7 +17,7 @@ class QuotaMiddleware(BaseHTTPMiddleware):
             user_id = f"anon_{anon_id}"
             is_anon = True
         quota = get_user_quota(user_id)
-        if is_anon and quota >= FREE_TRIAL_LIMIT:
+        if is_anon and quota >= int(settings.FREE_TRIAL_QUOTA):
             return JSONResponse({"code": 402, "msg": "免费额度已用完，请注册/登录后继续使用！"}, status_code=402)
         resp = await call_next(request)
         set_user_quota(user_id, quota + 1)
