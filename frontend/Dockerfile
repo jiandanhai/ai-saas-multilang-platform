@@ -7,7 +7,7 @@ COPY package.json package-lock.json ./
 
 # 使用国内npm源，兼容旧lockfile
 RUN npm config set registry https://registry.npmmirror.com \
-    && npm install --legacy-peer-deps || (cat /app/package-lock.json && exit 100)
+    && npm install @swc/helpers --legacy-peer-deps || (cat /app/package-lock.json && exit 100)
 
 # 复制源码
 COPY . ./
