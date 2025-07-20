@@ -8,6 +8,8 @@
     "start": "next start"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.4",
+    "@heroicons/react": "^2.2.0",
     "axios": "^1.10.0",
     "framer-motion": "^12.23.6",
     "lucide-react": "^0.525.0",
@@ -23,5 +25,10 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "typescript": "5.8.3"
-  }
+  },
+  "description": "- React 18 / Next.js 14\r     - TypeScript 5+\r     - TailwindCSS 3+\r     - axios",
+  "main": "next.config.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

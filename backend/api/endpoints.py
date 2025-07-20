@@ -84,7 +84,7 @@ def get_quota(request: Request):
         ip = request.client.host
         key = f"{TRIAL_QUOTA_KEY_PREFIX}:{ip}"
     # 查用量
-    used = int(crud.get_user_quota(key))or 0
+    used = crud.get_user_quota(key)
     # 付费/高级用户无限制
     max_quota = settings.FREE_TRIAL_QUOTA if not user or user.role == "user" else 99999
     left = max_quota - used

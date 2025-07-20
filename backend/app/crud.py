@@ -67,8 +67,7 @@ def send_verify_email(email: str, code: str):
 
 
 def get_user_quota(key: str) -> int:
-    val = GeneralUtils.get_user_quota(key)
-    return int(val) if val is not None else 0
+    return GeneralUtils.get_user_quota(key)
 
 def set_user_quota(key: str, quota: int):
     GeneralUtils.set(key, quota)
