@@ -1,5 +1,5 @@
 # 1. 构建阶段
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 # 优化缓存：先复制依赖描述文件
@@ -9,7 +9,6 @@ COPY package.json package-lock.json ./
 RUN npm config set registry https://registry.npmmirror.com
 RUN npm cache clean --force
 RUN npm install --legacy-peer-deps || (cat /app/package-lock.json && exit 100)
-RUN npm install @swc/helpers@0.5.17 --legacy-peer-deps || (cat /app/package-lock.json && exit 100)
 
 # 复制源码
 COPY . ./
@@ -18,7 +17,7 @@ COPY . ./
 RUN npm run build && ls -l /app/.next || (echo 'NO .next FOUND' && exit 1)
 
 # 2. 生产运行阶段（更安全、镜像小）
-FROM node:18-alpine AS prod
+FROM node:20-alpine AS prod
 WORKDIR /app
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public

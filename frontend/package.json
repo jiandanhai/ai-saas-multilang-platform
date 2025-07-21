@@ -2,6 +2,7 @@
   "name": "ai-saas-frontend",
   "version": "1.0.0",
   "private": true,
+  "workspaces": ["frontend"],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,22 +11,28 @@
   "dependencies": {
     "@headlessui/react": "^2.2.4",
     "@heroicons/react": "^2.2.0",
+    "@react-aria/interactions": "^3.25.3",
     "@swc/helpers": "^0.5.17",
     "axios": "^1.10.0",
     "framer-motion": "^12.23.6",
     "lucide-react": "^0.525.0",
-    "next": "^12.3.4",
+    "next": "^15.4.2",
     "next-pwa": "^5.6.0",
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
-    "react-router-dom": "^6.0.0",
-    "tailwindcss": "^3.0.0"
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.7.0",
+    "tailwindcss": "^4.1.11"
   },
   "devDependencies": {
-    "@types/node": "24.0.12",
+    "@types/node": "24.0.15",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
-    "typescript": "5.8.3"
+    "glob": "^11.0.3",
+    "lru-cache": "^11.1.0",
+    "rimraf": "^6.0.1",
+    "typescript": "5.8.3",
+    "workbox-background-sync": "^7.3.0",
+    "workbox-google-analytics": "^7.3.0"
   },
   "description": "- React 18 / Next.js 14\r     - TypeScript 5+\r     - TailwindCSS 3+\r     - axios",
   "main": "next.config.js",
