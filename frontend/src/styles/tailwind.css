@@ -2,21 +2,217 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 可根据品牌自定义全局色彩与字体 */
+/* Custom Global Styles */
+
+/* Body font and general styling */
 body {
   font-family: 'Inter', 'Helvetica', 'Arial', sans-serif;
 }
 
-.btn { @apply bg-brand text-white font-bold rounded-xl px-4 py-2 hover:bg-indigo-700 transition; }
+/* Logo and images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Button styles for primary and secondary buttons */
+.btn {
+  @apply bg-brand text-white font-bold rounded-xl px-4 py-2 hover:bg-indigo-700 transition;
+}
+
+/* Input field styles */
 .input {
   @apply border rounded-lg py-2 px-4 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-brand/50 outline-none text-base transition-all;
 }
+
+/* Primary button style */
 .btn-primary {
   @apply bg-brand text-white py-2 px-4 rounded-xl font-bold hover:bg-brand-dark transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-md;
 }
+
+/* Secondary button style */
 .btn-secondary {
   @apply bg-gray-100 dark:bg-gray-700 text-brand font-medium py-2 px-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all shadow;
 }
+
+/* Branding color for text */
 .text-brand {
   @apply text-indigo-600 dark:text-indigo-400 font-bold;
 }
+
+/* Fade-in animation for elements */
+@keyframes fadein {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Fade-in animation utility */
+.animate-fadein {
+  animation: fadein 1s ease-in-out;
+}
+
+/* Shake animation for error feedback */
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+  75% {
+    transform: translateX(-5px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* Shake animation utility */
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Pop-in animation for tooltips */
+@keyframes popin {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Pop-in animation utility */
+.animate-popin {
+  animation: popin 0.3s ease-out;
+}
+
+/* Animation for buttons while loading */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-pulse {
+  animation: pulse 1s infinite ease-in-out;
+}
+
+/* Responsive Design */
+
+/* Ensuring elements scale well across devices */
+@media (max-width: 640px) {
+  .text-2xl {
+    font-size: 1.5rem; /* Adjusted text size for mobile */
+  }
+  .text-xl {
+    font-size: 1.25rem; /* Adjusted text size for mobile */
+  }
+  .max-w-7xl {
+    max-width: 100%; /* Full width on small devices */
+  }
+}
+
+/* Dark mode customization */
+@media (prefers-color-scheme: dark) {
+  .dark\:bg-gray-800 {
+    background-color: #2d3748; /* Dark background */
+  }
+  .dark\:text-gray-200 {
+    color: #e2e8f0; /* Light text on dark background */
+  }
+  .dark\:text-indigo-300 {
+    color: #63b3ed; /* Light text color for indigo in dark mode */
+  }
+  .dark\:hover\:bg-gray-700 {
+    background-color: #4a5568; /* Dark hover effect */
+  }
+}
+
+/* Custom class for gradient background */
+.bg-gradient-to-r {
+  background-image: linear-gradient(to right, var(--tw-gradient-stops));
+}
+.bg-gradient-to-br {
+  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+}
+
+/* Adding custom background colors */
+.bg-brand {
+  background-color: #5a67d8; /* Brand color */
+}
+
+.bg-brand-dark {
+  background-color: #4c51bf; /* Darker shade of brand color */
+}
+
+/* Utility classes for spacing */
+.mt-16 {
+  margin-top: 4rem; /* Top margin for spacing */
+}
+
+.mb-6 {
+  margin-bottom: 1.5rem; /* Bottom margin for spacing */
+}
+
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem; /* Horizontal padding */
+}
+
+.py-12 {
+  padding-top: 3rem;
+  padding-bottom: 3rem; /* Vertical padding */
+}
+
+.max-w-3xl {
+  max-width: 48rem; /* Max width for larger screens */
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto; /* Centering elements */
+}
+
+.text-gray-600 {
+  color: #718096; /* Light gray text */
+}
+
+.text-gray-400 {
+  color: #e2e8f0; /* Lighter gray text */
+}
+
+.text-indigo-600 {
+  color: #4c51bf; /* Indigo color for emphasis */
+}
+
+/* Button hover states */
+.hover\:bg-indigo-700:hover {
+  background-color: #2b6cb0; /* Darker shade of blue on hover */
+}
+
+.hover\:bg-gray-200:hover {
+  background-color: #edf2f7; /* Light gray on hover */
+}
+
+/* Placeholder styles */
+::placeholder {
+  color: #e2e8f0;
+  opacity: 1; /* Ensuring placeholder color is visible */
+}
+

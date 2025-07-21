@@ -1,5 +1,4 @@
-// UploadFile.tsx 极致美化+弹窗/动效增强（保留全部原有逻辑）
-
+// UploadFile.tsx
 import React, { useState } from "react";
 import { PaperClipIcon, CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 
@@ -9,7 +8,7 @@ export interface UploadFileProps {
   disabled?: boolean;
 }
 
-const UploadFile: React.FC<UploadFileProps> = ({ token, quotaLeft , disabled = false}) => {
+const UploadFile: React.FC<UploadFileProps> = ({ token, quotaLeft, disabled = false }) => {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
@@ -27,10 +26,9 @@ const UploadFile: React.FC<UploadFileProps> = ({ token, quotaLeft , disabled = f
     setError(null);
     setResult(null);
     try {
-      // 假设 /api/upload 接口
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch("/api/upload", {
+      const res = await fetch("/api/user/upload", {
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         body: formData,
@@ -60,8 +58,7 @@ const UploadFile: React.FC<UploadFileProps> = ({ token, quotaLeft , disabled = f
           className="hidden"
           disabled={loading || (quotaLeft !== undefined && quotaLeft <= 0)}
         />
-        <div className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl px-6 py-8 transition-all ${file ? 'border-green-400 bg-green-50 dark:bg-green-900/20' : 'border-gray-300 hover:border-indigo-500 bg-gray-50 dark:bg-gray-800/60'} ${loading ? 'opacity-70' : ''}`}
-        >
+        <div className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl px-6 py-8 transition-all ${file ? 'border-green-400 bg-green-50 dark:bg-green-900/20' : 'border-gray-300 hover:border-indigo-500 bg-gray-50 dark:bg-gray-800/60'} ${loading ? 'opacity-70' : ''}`}>
           <PaperClipIcon className="w-10 h-10 text-indigo-400 mb-2" />
           <span className="font-medium text-gray-500 dark:text-gray-200">{file ? file.name : "点击或拖拽上传文件"}</span>
         </div>
@@ -73,7 +70,6 @@ const UploadFile: React.FC<UploadFileProps> = ({ token, quotaLeft , disabled = f
       >
         {loading ? "上传中..." : (quotaLeft === 0 ? "额度已用尽" : "立即上传并处理")}
       </button>
-      {/* 动态提示/弹窗 */}
       {(result || error) && (
         <div className={`flex flex-col items-center mt-4 px-4 py-3 rounded-xl shadow-lg bg-white dark:bg-gray-800 border ${result ? 'border-green-400' : 'border-red-400'} animate-popin`}>
           {result && <CheckCircleIcon className="w-8 h-8 text-green-500 mb-1" />}
@@ -81,7 +77,6 @@ const UploadFile: React.FC<UploadFileProps> = ({ token, quotaLeft , disabled = f
           <div className="text-center font-medium text-lg text-gray-800 dark:text-gray-100">{result || error}</div>
         </div>
       )}
-      {/* 剩余额度警告 */}
       {quotaLeft !== undefined && quotaLeft <= 1 && (
         <div className="mt-3 px-3 py-2 rounded-lg bg-orange-100 text-orange-700 font-bold animate-shake">
           剩余额度仅剩 <span className="text-red-500 font-extrabold">{quotaLeft}</span> 次！注册升级可获得更多。

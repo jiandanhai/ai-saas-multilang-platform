@@ -1,80 +1,81 @@
-import React, { useState } from "react";
-import { useRouter } from "next/router";
-import api from "../api";
-import Header from "../components/Header";
+// login.tsx
+import React, { useState } from 'react';
+import { useRouter } from 'next/router';
 
 const Login: React.FC = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [shake, setShake] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError('');
+
     try {
-      const { data } = await api.post("/user/login", { username, password });
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("username", username);
-      router.push("/");
-    } catch (err: any) {
-      setError("登录失败，账号或密码错误");
-      setShake(true);
-      setTimeout(() => setShake(false), 500);
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('username', data.username);
+      router.push('/');
+    } catch (err) {
+      setError('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand/10 to-frost flex flex-col">
-      <Header />
-      <main className="flex flex-1 items-center justify-center">
-        <form
-          className={`bg-white dark:bg-gray-900/80 p-10 rounded-2xl shadow-xl w-full max-w-md space-y-6 border border-gray-100 animate-fadein ${shake ? "animate-shake" : ""}`}
-          onSubmit={handleLogin}
-        >
-          <h2 className="text-2xl font-bold text-brand text-center mb-4">欢迎登录</h2>
-          {error && <div className="text-red-500 text-sm mb-2 text-center">{error}</div>}
+    <div className="min-h-screen bg-gradient-to-b from-white to-slate-100 dark:from-zinc-950 dark:to-zinc-900 flex justify-center items-center">
+      <div className="bg-white dark:bg-gray-800 shadow-xl rounded-xl p-8 max-w-lg w-full">
+        <h2 className="text-3xl font-bold text-center text-brand dark:text-indigo-300 mb-6">登录到 LinguaFlow</h2>
+        {error && <div className="text-red-500 text-center mb-4">{error}</div>}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
-            className="w-full px-4 py-3 border rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand focus:outline-none"
-            placeholder="用户名/邮箱/手机号"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            autoFocus
+            type="email"
+            placeholder="邮箱地址"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand"
+            required
           />
           <input
-            className="w-full px-4 py-3 border rounded-lg bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-brand focus:outline-none"
-            placeholder="密码"
             type="password"
+            placeholder="密码"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
+            className="p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand"
+            required
           />
-          <div className="flex justify-between items-center text-xs text-gray-400">
-            <span>
-              登录即同意
-              <a href="/terms" className="text-brand underline ml-1" target="_blank">服务协议</a>
-            </span>
-            <a href="/register" className="text-brand underline">还没有账号？注册</a>
-          </div>
           <button
-            className={`w-full py-3 rounded-xl font-bold bg-brand text-white hover:bg-indigo-700 transition mt-2 ${loading ? "opacity-50 cursor-wait" : ""}`}
             type="submit"
+            className={`btn-primary mt-4 ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
             disabled={loading}
           >
-            {loading ? "登录中..." : "登录"}
+            {loading ? '登录中...' : '登录'}
           </button>
-          <div className="flex gap-3 items-center mt-3 justify-center">
-            <span className="text-gray-400 text-xs">第三方登录:</span>
-            <button type="button" className="px-3 py-1 rounded border bg-white shadow hover:bg-frost">微信</button>
-            <button type="button" className="px-3 py-1 rounded border bg-white shadow hover:bg-frost">Google</button>
-            {/* ...可拓展 */}
-          </div>
         </form>
-      </main>
+        <div className="mt-4 text-center">
+          <p className="text-sm">
+            没有账号？ <a href="/register" className="text-blue-600">立即注册</a>
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
+
 export default Login;

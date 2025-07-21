@@ -43,9 +43,6 @@ class GeneralUtils:
     def get_user_quota(cls, key):
         r = cls.get_client()
         val = r.get(key)
-        if val is None:
-            r.set(key, settings.FREE_TRIAL_QUOTA, ex=86400)
-            val = settings.FREE_TRIAL_QUOTA
         print(f"#val-->{val}")
         return int(val)
 

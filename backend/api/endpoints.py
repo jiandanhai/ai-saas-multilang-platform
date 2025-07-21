@@ -1,3 +1,4 @@
+import response
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks, Request,Response
 from sqlalchemy.orm import Session
 from app import models, schemas, crud, auth
@@ -13,6 +14,8 @@ from jose import JWTError, jwt
 from typing import Optional
 from app import crud, models, schemas
 import uuid
+from fastapi.responses import JSONResponse
+
 
 router = APIRouter(prefix="/user")
 # SaaS试用配额配置
@@ -24,7 +27,7 @@ def random_code(n=6):
 class VerifyCodeRequest(BaseModel):
     email: EmailStr
 
-TRIAL_QUOTA_KEY_PREFIX = "trial_quota:ip"
+ANON_KEY_PREFIX = "anon"
 QUOTA_KEY_PREFIX = "user_quota"
 VERIFY_KEY_PREFIX = "verify_code"
 
@@ -75,20 +78,44 @@ def login(user: schemas.UserLogin):
 
 #获取当前用户或游客配额信息，支持未登录试用,未登录可匿名查剩余额度
 @router.get("/quota")
-def get_quota(request: Request):
-    user = get_current_user(request)
+async  def process_quota(request: Request, user=None, crud=None, call_next=None, settings=None):
+    #user = get_current_user(request)
+    # Function to get or create a quota key for the user
     if user:
-        key =  f"{QUOTA_KEY_PREFIX}:{user.id}"
+        # If the user is logged in, use their user ID
+        key= f"{QUOTA_KEY_PREFIX}:{user.id}"
     else:
-        # 匿名用户用 ip/session 作 key（示例用 ip）
-        ip = request.client.host
-        key = f"{TRIAL_QUOTA_KEY_PREFIX}:{ip}"
-    # 查用量
+        # For anonymous users, prioritize anon_id (cookies), fallback to IP if anon_id is not available
+        anon_id = request.cookies.get('anon_id')
+        if not anon_id:
+            # If no anon_id exists, create a new one and store it in the cookie
+            anon_id = str(uuid.uuid4())
+            # Proceed with the API call if quota allows
+            resp = await call_next(request)
+            resp.set_cookie('anon_id', anon_id, max_age=30 * 24 * 3600)  # 30 days expiry
+        key = f"{ANON_KEY_PREFIX}:{anon_id}"
+
+    # Check for anonymous or logged-in user quota
+    is_anon = user is None  # If the user is None, they are an anonymous user
     used = crud.get_user_quota(key)
-    # 付费/高级用户无限制
-    max_quota = settings.FREE_TRIAL_QUOTA if not user or user.role == "user" else 99999
-    left = max_quota - used
-    print(f"#max_quota-->{max_quota};used-->{used};left-->{left};max(left, 0)-->{max(left, 0)}")
+
+    # Check free trial quota for anonymous users
+    if is_anon and used >= int(settings.FREE_TRIAL_QUOTA):
+        return JSONResponse({"code": 402, "msg": "免费额度已用完，请注册/登录后继续使用！"}, status_code=402)
+
+    # Update the quota for the user or anonymous user
+    if is_anon:
+        crud.set_user_quota(key, used + 1)  # Increment quota for the anonymous user
+
+    # For logged-in users, handle their quotas accordingly
+    if user and user.role != "user":  # If user is not a basic user, assign unlimited quota or a high limit
+        max_quota = settings.FREE_TRIAL_QUOTA
+    else:
+        max_quota = 99999  # Assuming 99999 as the maximum quota for non-free users
+
+    # Calculate remaining quota
+    left = max(max_quota - used, 0)
+    print(f"Max Quota: {max_quota}; Used: {used}; Left: {left}")
     return {"quotaLeft": max(left, 0), "maxQuota": max_quota}
 
 # -------- 文件上传并触发AI流水线 --------
@@ -102,14 +129,15 @@ def upload_file(
     """
     user = get_current_user(request)
     if user:
-        key = f"{QUOTA_KEY_PREFIX}:{user.id}"
-        role = user.role
+        # If the user is logged in, use their user ID
+        key= f"{QUOTA_KEY_PREFIX}:{user.id}"
     else:
-        ip = request.client.host
-        key = f"{TRIAL_QUOTA_KEY_PREFIX}:{ip}"
+        # For anonymous users, prioritize anon_id (cookies), fallback to IP if anon_id is not available
+        anon_id = request.cookies.get('anon_id')
+        key = f"{ANON_KEY_PREFIX}:{anon_id}"
         role = "user"
 
-        used = int(crud.get_quota(key))or 0
+        used = crud.get_user_quota(key)
         max_quota = settings.FREE_TRIAL_QUOTA if not user or role == "user" else 99999
         if used >= max_quota:
             raise HTTPException(status_code=403, detail="已用完免费额度，请注册/登录/付费后继续使用。")

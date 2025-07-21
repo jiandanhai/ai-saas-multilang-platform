@@ -1,6 +1,7 @@
+// Header.tsx
 import React from "react";
 import Link from "next/link";
-import { SunIcon, MoonIcon, UserCircleIcon, ArrowLeftOnRectangleIcon  } from "@heroicons/react/24/outline";;
+import { SunIcon, MoonIcon, UserCircleIcon, ArrowLeftOnRectangleIcon } from "@heroicons/react/24/outline";
 
 interface HeaderProps {
   token?: string;
@@ -10,11 +11,13 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ token, username, onLogout, quotaLeft }) => {
-  // 主题切换留空钩子
   const [dark, setDark] = React.useState(false);
 
   React.useEffect(() => {
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) setDark(true);
+    // Detect system theme preference and set dark mode accordingly
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setDark(true);
+    }
   }, []);
 
   return (
@@ -22,6 +25,7 @@ const Header: React.FC<HeaderProps> = ({ token, username, onLogout, quotaLeft })
       <nav className="flex items-center justify-between max-w-7xl mx-auto px-6 py-3">
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center group">
+            {/* Logo size controlled to prevent it from becoming too large */}
             <img src="/icons/logo-512.png" alt="LinguaFlow" className="h-10 w-10 rounded-xl shadow transition-all group-hover:scale-110" />
             <span className="ml-3 text-2xl font-bold tracking-tight text-brand dark:text-white">LinguaFlow</span>
           </Link>
@@ -42,11 +46,11 @@ const Header: React.FC<HeaderProps> = ({ token, username, onLogout, quotaLeft })
             </>
           ) : (
             <button onClick={onLogout} className="ml-4 px-4 py-1.5 flex items-center gap-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-red-200 dark:hover:bg-red-500/60 shadow transition font-semibold">
-              <ArrowLeftOnRectangleIcon  className="w-5 h-5" />
+              <ArrowLeftOnRectangleIcon className="w-5 h-5" />
               退出
             </button>
           )}
-          {/* 主题切换（留空） */}
+          {/* Theme toggle button */}
           <button onClick={() => setDark(d => !d)} className="ml-3 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition hidden sm:inline-flex" aria-label="切换主题">
             {dark ? <SunIcon className="w-6 h-6 text-yellow-400" /> : <MoonIcon className="w-6 h-6 text-indigo-400" />}
           </button>

@@ -1,3 +1,4 @@
+// index.tsx (Home Page)
 import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import TrialQuotaBanner from '../components/TrialQuotaBanner';
@@ -62,17 +63,16 @@ const HomePage: React.FC = () => {
       <Header token={token} username={username} onLogout={handleLogout} quotaLeft={quotaLeft ?? 0} />
       <TrialQuotaBanner quotaLeft={quotaLeft ?? 0} />
       <main className="max-w-3xl mx-auto px-4 py-12 flex flex-col items-center gap-8">
-        {/* LOGO区 */}
         <div className="flex flex-col items-center w-full">
+          {/* Logo fixed size */}
           <img
             src="/icons/logo.png"
             alt="LinguaFlow Logo"
             className="h-32 w-32 mb-3 drop-shadow-lg"
-            style={{ maxWidth: 140, maxHeight: 140 }}
+            style={{ maxWidth: 140, maxHeight: 140 }} // Fix the logo size to avoid overflow
           />
           <h1 className="text-3xl md:text-4xl font-extrabold text-brand mb-1 text-center">LinguaFlow 多语言AI平台</h1>
         </div>
-        {/* 配额提示 */}
         <div className="w-full flex flex-col items-center">
           <p className="mb-2 text-base text-gray-600 text-center">
             极速试用文件/语音转多语言。新用户赠送免费额度，额度用完后请注册/登录/升级套餐解锁全部功能。
@@ -80,15 +80,16 @@ const HomePage: React.FC = () => {
           {typeof quotaLeft === 'number' && (
             <p className="mb-2 text-blue-700 font-medium">
               剩余额度: <span className="font-bold">{quotaLeft}</span>
-              {quotaLeft === 0 && <>
-                ，<a href="/register" className="text-violet-700 underline ml-1">注册</a>
-                或<a href="/plans" className="text-violet-700 underline ml-1">升级套餐</a>以继续使用！
-              </>}
+              {quotaLeft === 0 && (
+                <>
+                  ，<a href="/register" className="text-violet-700 underline ml-1">注册</a>
+                  或<a href="/plans" className="text-violet-700 underline ml-1">升级套餐</a>以继续使用！
+                </>
+              )}
             </p>
           )}
           {quotaError && <p className="text-red-500 text-center mt-1">{quotaError}</p>}
         </div>
-        {/* 上传文件区域 */}
         <section className="w-full flex flex-col items-center">
           <UploadFile
             token={token}
