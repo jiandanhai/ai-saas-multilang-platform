@@ -14,7 +14,7 @@ from jose import JWTError, jwt
 from typing import Optional
 from app import crud, models, schemas
 import uuid
-from fastapi.responses import JSONResponse
+from starlette.responses import JSONResponse
 
 
 router = APIRouter(prefix="/user")
