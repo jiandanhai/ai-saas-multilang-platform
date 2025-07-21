@@ -1,6 +1,4 @@
-import response
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks, Request,Response
-from sqlalchemy.orm import Session
 from app import models, schemas, crud, auth
 from app.crud import send_verify_email, get_tasks
 from services import asr_service, translate_service, tts_service, billing
@@ -9,7 +7,6 @@ from pydantic import BaseModel, EmailStr
 import os, shutil, random, string
 from app.config import settings
 from captcha.image import ImageCaptcha
-from fastapi.responses import JSONResponse
 from jose import JWTError, jwt
 from typing import Optional
 from app import crud, models, schemas
